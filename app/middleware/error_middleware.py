@@ -1,4 +1,7 @@
-#error handling in middleware :detailed with status error no and message 
+from flask import jsonify
+from werkzeug.exceptions import HTTPException
+from sqlalchemy.exc import SQLAlchemyError
+import traceback
 
 from app.utils.validations import handle_error
 from flask import jsonify
@@ -33,13 +36,15 @@ def register_jwt_errors(jwt):
         }), 401
 
 def register_error_handlers(app):
-    @app.errorhandler(404)
-    def not_found(e):
-        return handle_error("Resource not found", 404)
 
-    @app.errorhandler(500)
-    def internal_error(e):
-        return handle_error("An internal server error occurred", 500)
+    # Handle all HTTP errors
+    @app.errorhandler(HTTPException)
+    def handle_http_exception(error):
+        return jsonify({
+            "success": False,
+            "message": error.description,
+            "status_code": error.code
+        }), error.code
 
     @app.errorhandler(401)
     def unauthorized(e):

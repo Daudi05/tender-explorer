@@ -1,33 +1,55 @@
-from flask import Flask,jsonify
-from app.extensions import db, migrate, jwt, cors
+
+from flask import Flask
+from flask_cors import CORS
+
 from config import Config
+
+from app.extensions import db, ma, jwt, migrate
+
+from app.tenders.controllers.tender_routes import tender_bp
 from app.auth.controllers.user_routes import user_bp
-from app.middleware.error_middleware import register_jwt_errors
+from app.documents.controllers.document_routes import documents_bp
+
+# Import models so SQLAlchemy detects them
+from app.tenders.models.tender import Tender
+from app.auth.models.user import User
+from app.bids.models.bid import Bid
+from app.documents.models.document import Document
+
 
 def create_app():
     app = Flask(__name__)
+
+    # Load config
     app.config.from_object(Config)
 
+    # Initialize extensions
     db.init_app(app)
-    migrate.init_app(app, db)
+    ma.init_app(app)
     jwt.init_app(app)
-    cors.init_app(app)
+    migrate.init_app(app)
 
-    app.register_blueprint(user_bp, url_prefix="/api/auth")
-   
+    # Enable CORS
+    CORS(app)
 
-    @app.errorhandler(400)
-    def bad_request(error):
-        return jsonify({"success": False, "message": "Bad request"}), 400
+    # Register blueprints
+    app.register_blueprint(
+        tender_bp,
+        url_prefix="/api/v1/tenders"
+    )
 
-    @app.errorhandler(404)
-    def not_found(error):
-        return jsonify({"success": False, "message": "Not found"}), 404
+    app.register_blueprint(
+        user_bp,
+        url_prefix="/api/auth"
+    )
 
-    @app.errorhandler(500)
-    def server_error(error):
-        return jsonify({"success": False, "message": "Internal server error"}), 500
+    app.register_blueprint(
+        documents_bp,
+        url_prefix="/api"
+    )
 
-    
+    # Create tables (development only)
+    with app.app_context():
+        db.create_all()
 
     return app
