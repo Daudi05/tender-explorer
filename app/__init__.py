@@ -1,27 +1,30 @@
 from flask import Flask
-from app.extensions import db, ma, jwt, migrate
-from app.middleware.error_middleware import register_error_handlers
-import os
+from app.extensions import db, migrate, jwt, cors
+from config import Config
+from app.auth.controllers.user_routes import user_bp
 
 def create_app():
     app = Flask(__name__)
-    
-    # Configurations
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'mysql+pymysql://root:password@localhost/tender_db')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'group6-secret-key')
+    app.config.from_object(Config)
 
-    # Initializing  Extensions
     db.init_app(app)
-    ma.init_app(app)
-    jwt.init_app(app)
     migrate.init_app(app, db)
+    jwt.init_app(app)
+    cors.init_app(app)
 
-    # Register Global Error Handlings here later 
-    register_error_handlers(app)
+    app.register_blueprint(user_bp, url_prefix="/api/auth")
+   
 
-    # To be filled later here for the blueprints 
-    # app.register_blueprint(auth_bp)
-    # app.register_blueprint(tender_bp)
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({"success": False, "message": "Bad request"}), 400
+
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({"success": False, "message": "Not found"}), 404
+
+    @app.errorhandler(500)
+    def server_error(error):
+        return jsonify({"success": False, "message": "Internal server error"}), 500
 
     return app
