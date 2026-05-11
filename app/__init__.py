@@ -1,13 +1,13 @@
-from flask import Flask, jsonify, Config
+from flask import Flask, jsonify
 from flask_cors import CORS
 from app.extensions import db, ma, jwt, migrate
 from app.middleware.error_middleware import register_error_handlers
 from app.tenders.controllers.tender_routes import tender_bp
-#from app.bids.controllers.bid_routes import bid_bp
 from config import Config
 from app.auth.controllers.user_routes import user_bp
 from app.documents.controllers.document_routes import documents_bp
-import os
+from app.awards.routes import awards_bp
+from app.notifications.routes import notifications_bp
 
 def create_app():
     app = Flask(__name__)
@@ -19,16 +19,13 @@ def create_app():
     CORS(app)
     ma.init_app(app)
 
-    # Register Global Error Handlings here later 
     register_error_handlers(app)
-    
-
 
     app.register_blueprint(tender_bp, url_prefix='/api/v1/tenders')
     app.register_blueprint(user_bp, url_prefix='/api/auth/')
-    #app.register_blueprint(bid_bp, url_prefix='/api/bid')
     app.register_blueprint(documents_bp, url_prefix='/api')
-
+    app.register_blueprint(awards_bp, url_prefix='/api/awards')
+    app.register_blueprint(notifications_bp, url_prefix='/api/notifications')
 
     @app.errorhandler(400)
     def bad_request(error):
