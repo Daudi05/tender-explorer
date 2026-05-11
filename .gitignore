@@ -2,4 +2,19 @@ venv/
 __pycache__/
 *.pyc
 instance/
+# Python virtual environment
+venv/
+
+# Python compiled files
+__pycache__/
+*.pyc
+
+# SQLite database (each developer has their own)
+*.db
+
+# Uploaded files (user uploads, don't push to GitHub)
+uploads/*
+!uploads/.gitkeep
+
+# Secret/environment files
 .env
