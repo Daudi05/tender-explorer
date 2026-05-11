@@ -7,7 +7,10 @@ class Bid(db.Model):
 
     __tablename__ = "bids"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
 
     uuid = db.Column(
         db.String(36),
@@ -18,11 +21,13 @@ class Bid(db.Model):
 
     contractor_id = db.Column(
         db.Integer,
+        db.ForeignKey("users.id"),
         nullable=False
     )
 
     tender_id = db.Column(
         db.Integer,
+        db.ForeignKey("tenders.id"),
         nullable=False
     )
 
@@ -38,6 +43,7 @@ class Bid(db.Model):
 
     status = db.Column(
         db.String(50),
+        nullable=False,
         default="Submitted"
     )
 
