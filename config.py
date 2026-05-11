@@ -1,7 +1,9 @@
 import os
+from datetime import timedelta
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:password@localhost/tender_db'
+    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///tender_explorer.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    JWT_SECRET_KEY = 'super-secret-key'
-    UPLOAD_FOLDER = 'app/static/uploads'
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "jwt-secret-key")
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(seconds=int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES", 3600)))

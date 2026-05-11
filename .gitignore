@@ -1,16 +1,25 @@
-# Python virtual environment
+# Virtual Environment
 venv/
 
-# Python compiled files
+# Python cache
 __pycache__/
 *.pyc
 
-# SQLite database (each developer has their own)
-*.db
+# Flask instance folder
+instance/
 
-# Uploaded files (user uploads, don't push to GitHub)
-uploads/*
-!uploads/.gitkeep
-
-# Secret/environment files
+# Environment variables
 .env
+
+# Database files
+*.db
+*.sqlite3
+
+# Migrations cache
+migrations/__pycache__/
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
