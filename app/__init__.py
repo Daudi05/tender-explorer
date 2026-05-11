@@ -1,6 +1,10 @@
 from flask import Flask
 from app.extensions import db, ma, jwt, migrate
 from app.middleware.error_middleware import register_error_handlers
+from app.tenders.controllers.tender_routes import tender_bp
+#from app.bids.controllers.bid_routes import bid_bp
+from app.auth.controllers.user_routes import user_bp
+from app.documents.controllers.document_routes import document_bp
 import os
 
 def create_app():
@@ -19,6 +23,14 @@ def create_app():
 
     # Register Global Error Handlings here later 
     register_error_handlers(app)
+    
+
+
+    app.register_blueprint(tender_bp, url_prefix='/api/v1/tenders')
+    app.register_blueprint(user_bp, url_prefix='/api/auth/')
+    #app.register_blueprint(bid_bp, url_prefix='/api/bid')
+    app.register_blueprint(document_bp, url_prefix='/api')
+
 
     # To be filled later here for the blueprints 
     # app.register_blueprint(auth_bp)
