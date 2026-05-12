@@ -1,0 +1,35 @@
+# Python virtual environment
+venv/
+env/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Database
+*.db
+*.sqlite
+
+# Uploads — keep folder structure, ignore actual files
+uploads/*
+!uploads/.gitkeep
+
+# Flask instance folder
+instance/
+
+# Secrets
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Nested clones (someone cloned the repo INSIDE the repo by accident)
+tender-explorer/
