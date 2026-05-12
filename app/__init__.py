@@ -10,6 +10,7 @@ from app.tenders.controllers.tender_routes import tender_bp
 from app.auth.controllers.user_routes import user_bp
 from app.documents.controllers.document_routes import documents_bp
 from app.bids.controllers.bid_routes import bid_bp
+from app.notifications.controllers.notification_routes import notifications_bp
 
 # Models (so SQLAlchemy registers them)
 from app.tenders.models.tender import Tender
