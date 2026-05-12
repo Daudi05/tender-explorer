@@ -1,4 +1,6 @@
 from flask import Blueprint
+from flask_jwt_extended import jwt_required
+from app.middleware.role_middleware import role_required
 
 from app.tenders.views.tender_service import TenderService
 
@@ -8,6 +10,8 @@ tender_bp = Blueprint(
 )
 
 @tender_bp.route('/', methods=['POST'])
+@jwt_required()
+@role_required("employer")
 def create_tender():
     return TenderService.create_tender()
 
