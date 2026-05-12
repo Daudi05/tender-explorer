@@ -16,7 +16,7 @@ from app.tenders.models.tender import Tender
 from app.auth.models.user import User
 from app.bids.models.bid import Bid
 from app.documents.models.document import Document
-
+from app.notifications.models.notification import Notification
 
 def create_app():
     app = Flask(__name__)
@@ -49,8 +49,9 @@ def create_app():
 
     app.register_blueprint(
         documents_bp,
-        url_prefix="/api"
+        url_prefix="/api/documents"
     )
+    app.register_blueprint(notifications_bp, url_prefix="/api/notifications")
 
     # Create tables (DEV ONLY)
     with app.app_context():
