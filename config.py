@@ -1,7 +1,9 @@
 import os
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:password@localhost/tender_db'
+    SECRET_KEY = "dev-secret"
+    JWT_SECRET_KEY = "dev-jwt-secret"
+    SQLALCHEMY_DATABASE_URI = "sqlite:///tender.db"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    JWT_SECRET_KEY = 'super-secret-key'
-    UPLOAD_FOLDER = 'app/static/uploads'
+    UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), "uploads")
+    MAX_CONTENT_LENGTH = 10 * 1024 * 1024
