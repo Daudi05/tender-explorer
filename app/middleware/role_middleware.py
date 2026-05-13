@@ -1,44 +1,29 @@
 from functools import wraps
-
 from flask import jsonify
-from flask_jwt_extended import (
-    get_jwt,
-    verify_jwt_in_request
-)
+from flask_jwt_extended import verify_jwt_in_request, get_jwt
 
 
 def role_required(*allowed_roles):
-
-    def wrapper(fn):
-
+    def decorator(fn):
         @wraps(fn)
-        def decorator(*args, **kwargs):
-
-            try:
-                verify_jwt_in_request()
-
-                claims = get_jwt()
-
-                role = claims.get("role")
-
-                if role not in allowed_roles:
-                    return jsonify({
-                        "success": False,
-                        "message": "Access forbidden",
-                        "required_roles": allowed_roles,
-                        "your_role": role
-                    }), 403
-
-                return fn(*args, **kwargs)
-
-            except Exception as error:
-
+        def wrapper(*args, **kwargs):
+            verify_jwt_in_request()
+            claims = get_jwt()
+            if claims.get("role") not in allowed_roles:
                 return jsonify({
                     "success": False,
-                    "message": "Authorization failed",
-                    "error": str(error)
-                }), 401
+                    "message": f"Forbidden - requires role: {', '.join(allowed_roles)}",
+                }), 403
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
 
-        return decorator
 
+def verified_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        verify_jwt_in_request()
+        if not get_jwt().get("is_verified"):
+            return jsonify({"success": False, "message": "Email verification required"}), 403
+        return fn(*args, **kwargs)
     return wrapper

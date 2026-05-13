@@ -1,40 +1,5 @@
-from functools import wraps
+# Lightweight wrapper — most routes use flask_jwt_extended's @jwt_required directly.
+# This file is here if anyone needs a custom auth layer later.
+from flask_jwt_extended import jwt_required as _jwt_required
 
-from flask import jsonify
-
-from flask_jwt_extended import (
-    verify_jwt_in_request,
-    get_jwt_identity
-)
-
-
-def auth_required(fn):
-
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-
-        try:
-            verify_jwt_in_request()
-
-            return fn(*args, **kwargs)
-
-        except Exception as error:
-
-            return jsonify({
-                "success": False,
-                "message": "Authentication required",
-                "error": str(error)
-            }), 401
-
-    return wrapper
-
-
-def current_user():
-
-    try:
-        verify_jwt_in_request()
-
-        return get_jwt_identity()
-
-    except Exception:
-        return None
+jwt_required = _jwt_required

@@ -5,10 +5,10 @@ from app.notifications.models.notification import Notification
 class NotificationRepository:
     @staticmethod
     def create(data):
-        notif = Notification(**data)
-        db.session.add(notif)
+        n = Notification(**data)
+        db.session.add(n)
         db.session.commit()
-        return notif
+        return n
 
     @staticmethod
     def get_by_id(notif_id):
@@ -23,10 +23,10 @@ class NotificationRepository:
         return Notification.query.filter_by(user_id=user_id, is_read=False).count()
 
     @staticmethod
-    def mark_read(notif):
-        notif.is_read = True
+    def mark_read(n):
+        n.is_read = True
         db.session.commit()
-        return notif
+        return n
 
     @staticmethod
     def mark_all_read(user_id):

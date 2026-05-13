@@ -1,61 +1,40 @@
 from flask import Flask
-from flask_cors import CORS
-
 from config import Config
+from app.extensions import db, jwt, ma, bcrypt
+from app.middleware.error_middleware import register_error_handlers
 
-from app.extensions import db, ma, jwt, migrate
-
-# Blueprints
-from app.tenders.controllers.tender_routes import tender_bp
-from app.auth.controllers.user_routes import user_bp
-from app.documents.controllers.document_routes import documents_bp
-from app.bids.controllers.bid_routes import bid_bp
-from app.notifications.controllers.notification_routes import notifications_bp
-
-# Models (so SQLAlchemy registers them)
-from app.tenders.models.tender import Tender
-from app.auth.models.user import User
-from app.bids.models.bid import Bid
-from app.documents.models.document import Document
-from app.notifications.models.notification import Notification
 
 def create_app():
     app = Flask(__name__)
-
-    # Load configuration
     app.config.from_object(Config)
 
     # Initialize extensions
     db.init_app(app)
-    ma.init_app(app)
     jwt.init_app(app)
-    migrate.init_app(app)
-    CORS(app)
+    ma.init_app(app)
+    bcrypt.init_app(app)
+    register_error_handlers(app)
 
-    # Register blueprints
-    app.register_blueprint(
-        user_bp,
-        url_prefix="/api/auth"
-    )
+    # Register all the module blueprints
+    from app.auth.controllers.user_routes import auth_bp
+    from app.tenders.controllers.tender_routes import tenders_bp
+    from app.bids.controllers.bid_routes import bids_bp
+    from app.documents.controllers.document_routes import documents_bp
+    from app.notifications.controllers.notification_routes import notifications_bp
 
-    app.register_blueprint(
-        tender_bp,
-        url_prefix="/api/v1/tenders"
-    )
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(tenders_bp)
+    app.register_blueprint(bids_bp)
+    app.register_blueprint(documents_bp)
+    app.register_blueprint(notifications_bp)
 
-    app.register_blueprint(
-        bid_bp,
-        url_prefix="/api/v1/bids"
-    )
-
-    app.register_blueprint(
-        documents_bp,
-        url_prefix="/api/documents"
-    )
-    app.register_blueprint(notifications_bp, url_prefix="/api/notifications")
-
-    # Create tables (DEV ONLY)
+    # Create database tables (imports trigger SQLAlchemy registration)
     with app.app_context():
+        from app.auth.models.user import User
+        from app.tenders.models.tender import Tender
+        from app.bids.models.bid import Bid
+        from app.documents.models.document import Document
+        from app.notifications.models.notification import Notification
         db.create_all()
 
     return app

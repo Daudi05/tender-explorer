@@ -1,47 +1,58 @@
-# This file describes the "documents" table in the database.
-# Each row in this table is one uploaded file's INFO (not the file itself).
-# The actual file (PDF, DOCX, etc.) is saved on disk in the uploads/ folder.
-
+# ============================================================
+# Document MODEL — defines the "documents" table in the database.
+# Each row in this table is metadata about one uploaded file.
+# The actual file bytes live on disk in the uploads/ folder.
+# ============================================================
 from datetime import datetime
 import uuid
 from app.extensions import db
 
 
 class Document(db.Model):
-    # The real name of the database table
+    # SQLAlchemy looks for __tablename__ to know what to call the DB table
     __tablename__ = "documents"
 
-    # A unique random ID for each document (like a fingerprint).
+    # ----- PRIMARY KEY -----
+    # UUID string — unique even across servers, never re-used.
     # Example: "e9ea7b30-1738-4fb3-ac6a-569514e75bcd"
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(
+        db.String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),  # lambda = generate a new UUID per row
+    )
 
-    # The safe filename we save on disk. Looks like: 20260509_xxxxx_test.pdf
-    # Must be unique so two users uploading "cv.pdf" don't overwrite each other.
+    # ----- FILE INFO -----
+    # The SAFE filename actually written to disk.
+    # Format: 20260512_<uuid-hex>_<sanitized_name>.pdf
+    # unique=True prevents two rows from claiming the same file on disk.
     stored_filename = db.Column(db.String(255), nullable=False, unique=True)
 
-    # What the user CALLED the file when they uploaded it (e.g. "John_CV.pdf").
-    # Used when they download it later — they get back their own filename.
+    # The ORIGINAL filename the user gave us (e.g. "John_CV.pdf").
+    # Used when downloading — the file comes back with this name.
     original_filename = db.Column(db.String(255), nullable=False)
 
-    # The kind of file (e.g. "application/pdf", "image/png")
+    # MIME type, e.g. "application/pdf" or "image/png"
     file_type = db.Column(db.String(100), nullable=False)
 
-    # How big the file is, in bytes
+    # Size in bytes. Used to enforce the 10 MB limit.
     file_size = db.Column(db.Integer, nullable=False)
 
-    # What this document is for: CV, PROPOSAL, TENDER_DOC, or AWARD_LETTER.
-    # "index=True" makes searching by type faster.
+    # ----- DOCUMENT CATEGORY -----
+    # One of: CV, PROPOSAL, TENDER_DOC, AWARD_LETTER
+    # index=True makes "find all CVs" fast — O(log n) instead of O(n).
     document_type = db.Column(db.String(50), nullable=False, index=True)
 
-    # Who uploaded this file (their user ID).
-    # "index=True" makes "show me all my documents" a fast query.
+    # ----- OWNERSHIP -----
+    # UUID of the user who uploaded this. Indexed because "list MY docs"
+    # is the most common query in the system.
     uploader_id = db.Column(db.String(36), nullable=False, index=True)
 
-    # If this doc belongs to a bid, link it here. Otherwise empty.
+    # ----- OPTIONAL LINKS -----
+    # If this doc belongs to a bid (e.g. CV attached to a bid), store bid_id.
     bid_id = db.Column(db.String(36), nullable=True, index=True)
-
-    # If this doc belongs to a tender, link it here. Otherwise empty.
+    # If this doc belongs to a tender (e.g. tender requirements PDF), store tender_id.
     tender_id = db.Column(db.String(36), nullable=True, index=True)
 
-    # When the file was uploaded (auto-filled with current time)
+    # ----- TIMESTAMP -----
+    # Auto-filled with current UTC time when the row is created.
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
