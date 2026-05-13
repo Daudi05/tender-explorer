@@ -1,29 +1,18 @@
 from functools import wraps
-from flask import jsonify
-from flask_jwt_extended import verify_jwt_in_request, get_jwt
+from flask_jwt_extended import get_jwt, verify_jwt_in_request
+from app.utils.validations import handle_error
 
-
-def role_required(*allowed_roles):
-    def decorator(fn):
+def role_required(role_name):
+    def wrapper(fn):
         @wraps(fn)
-        def wrapper(*args, **kwargs):
+        def decorator(*args, **kwargs):
             verify_jwt_in_request()
             claims = get_jwt()
-            if claims.get("role") not in allowed_roles:
-                return jsonify({
-                    "success": False,
-                    "message": f"Forbidden - requires role: {', '.join(allowed_roles)}",
-                }), 403
+
+            ##The  role for JWT identity to be included here by the person working on auth part 
+            # in here  Brian (Dev 1) includes 'role' in the JWT identity
+            if claims.get("role") != role_name:
+                return handle_error(f"Access Denied: Requires {role_name} role", 403)
             return fn(*args, **kwargs)
-        return wrapper
-    return decorator
-
-
-def verified_required(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        verify_jwt_in_request()
-        if not get_jwt().get("is_verified"):
-            return jsonify({"success": False, "message": "Email verification required"}), 403
-        return fn(*args, **kwargs)
+        return decorator
     return wrapper
