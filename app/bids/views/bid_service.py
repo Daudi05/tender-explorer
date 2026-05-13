@@ -3,6 +3,7 @@ from app.extensions import db
 from app.bids.models.bid import Bid
 from app.bids.models.bid_repo import BidRepository
 from app.tenders.views.tender_service import TenderService
+from app.tenders.models.tender import Tender
 
 
 def _calculate_fraud_score(bid_amount, tender_avg, submission_ip, other_ips):
@@ -77,3 +78,19 @@ class BidService:
         for k, v in data.items():
             setattr(bid, k, v)
         return BidRepository.update(bid)
+    @staticmethod
+    def list_employer_bids(employer_id):
+
+        bids = (
+            db.session.query(Bid)
+            .join(
+                Tender,
+                Bid.tender_id == Tender.id
+            )
+            .filter(
+                Tender.employer_id == employer_id
+            )
+            .all()
+        )
+
+        return bids

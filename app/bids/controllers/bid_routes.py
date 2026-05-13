@@ -70,3 +70,27 @@ def update_bid(bid_id):
     except (ValueError, PermissionError) as e:
         return jsonify({"error": str(e)}), 400 if isinstance(e, ValueError) else 403
     return jsonify({"bid": bid_response_schema.dump(b)}), 200
+
+
+@bids_bp.route("/employer/all", methods=["GET"])
+@jwt_required()
+@role_required("EMPLOYER")
+def employer_bids():
+
+    employer_id = get_jwt_identity()
+
+    try:
+        bids = BidService.list_employer_bids(employer_id)
+
+        return jsonify({
+            "success": True,
+            "total": len(bids),
+            "bids": bids_response_schema.dump(bids)
+        }), 200
+
+    except Exception as e:
+
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
