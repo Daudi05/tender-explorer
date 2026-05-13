@@ -33,15 +33,14 @@ def create_app():
     from app.documents.controllers.document_routes import documents_bp
     from app.notifications.controllers.notification_routes import notifications_bp
 
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(tenders_bp)
-    app.register_blueprint(bids_bp)
-    app.register_blueprint(documents_bp)
-    app.register_blueprint(notifications_bp)
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(tenders_bp, url_prefix="/api/v1/tenders")
+    app.register_blueprint(bids_bp, url_prefix="/api/v1/bids")
+    app.register_blueprint(documents_bp, url_prefix="/api/v1/documents")
+    app.register_blueprint(notifications_bp, url_prefix="/api/v1/notifications")
 
-    # ----- Create database tables -----
-    # Importing the model classes inside app_context registers them
-    # with SQLAlchemy so db.create_all() knows what tables to make.
+    #  Create database tables 
+    
     with app.app_context():
         from app.auth.models.user import User
         from app.tenders.models.tender import Tender
