@@ -16,3 +16,7 @@ class Bid(db.Model):
     fraud_score = db.Column(db.Float, default=0.0, nullable=False, index=True)
     is_flagged = db.Column(db.Boolean, default=False, nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    tender = db.relationship("Tender", backref="bids", lazy=True)
+    contractor = db.relationship("User", backref="bids", lazy=True)

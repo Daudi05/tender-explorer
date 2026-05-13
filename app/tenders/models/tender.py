@@ -14,3 +14,5 @@ class Tender(db.Model):
     employer_id = db.Column(db.String(36), nullable=False, index=True)
     status = db.Column(db.String(20), default="OPEN", nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    employer = db.relationship("User", backref="tenders", lazy=True)

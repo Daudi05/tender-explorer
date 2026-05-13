@@ -1,31 +1,83 @@
 from sqlalchemy import func
 from app.extensions import db
+
 from app.bids.models.bid import Bid
 from app.bids.models.bid_repo import BidRepository
 from app.tenders.views.tender_service import TenderService
 from app.tenders.models.tender import Tender
+from app.auth.models.user import User
 
 
+# -----------------------------
+# FRAUD SCORING ENGINE
+# -----------------------------
 def _calculate_fraud_score(bid_amount, tender_avg, submission_ip, other_ips):
     score = 0.0
-    if tender_avg > 0 and bid_amount < (tender_avg * 0.5):
-        score += 40  # suspicious low bid
+
+    if tender_avg > 0:
+        # suspicious LOW bid
+        if bid_amount < (tender_avg * 0.5):
+            score += 40
+
+        # suspicious HIGH bid
+        if bid_amount > (tender_avg * 2):
+            score += 30
+
+    # IP reuse signal
     if submission_ip and submission_ip in other_ips:
-        score += 40  # same IP, different account
-    return score
+        score += 20
+
+    return min(score, 100)
 
 
+# -----------------------------
+# BID SERVICE
+# -----------------------------
 class BidService:
+
     @staticmethod
     def submit(data, contractor_id, request_ip):
+
+        # -----------------------------
+        # USER VALIDATION
+        # -----------------------------
+        contractor = User.query.get(contractor_id)
+
+        if not contractor:
+            raise ValueError("User not found")
+
+        if contractor.role != "CONTRACTOR":
+            raise ValueError("Only contractors can submit bids")
+
+        if not contractor.is_verified:
+            raise ValueError("Account not verified")
+
+        # -----------------------------
+        # TENDER VALIDATION
+        # -----------------------------
         tender = TenderService.get(data["tender_id"])
+
         if not tender:
             raise ValueError("Tender not found")
+
         if TenderService.is_deadline_passed(tender):
             raise ValueError("Tender deadline has passed")
+
+        if tender.status != "OPEN":
+            raise ValueError("Tender is not open for bidding")
+
+        if tender.employer_id == contractor_id:
+            raise ValueError("You cannot bid on your own tender")
+
+        # -----------------------------
+        # DUPLICATE CHECK
+        # -----------------------------
         if BidRepository.existing(data["tender_id"], contractor_id):
             raise ValueError("You already submitted a bid for this tender")
 
+        # -----------------------------
+        # CREATE BID
+        # -----------------------------
         bid = Bid(
             tender_id=data["tender_id"],
             contractor_id=contractor_id,
@@ -35,61 +87,104 @@ class BidService:
             submission_ip=request_ip,
             status="SUBMITTED",
         )
+
         db.session.add(bid)
-        db.session.flush()
+        db.session.flush()  # get bid.id before commit
 
-        # fraud scoring
+        # -----------------------------
+        # FRAUD SCORING
+        # -----------------------------
         avg = db.session.query(func.avg(Bid.bid_amount)).filter(
-            Bid.tender_id == data["tender_id"], Bid.id != bid.id,
+            Bid.tender_id == data["tender_id"],
+            Bid.id != bid.id
         ).scalar() or 0
-        other_ips = {b.submission_ip for b in Bid.query.filter(
-            Bid.tender_id == data["tender_id"], Bid.id != bid.id,
-        ).all() if b.submission_ip}
 
-        bid.fraud_score = _calculate_fraud_score(bid.bid_amount, avg, request_ip, other_ips)
+        other_ips = {
+            b.submission_ip for b in Bid.query.filter(
+                Bid.tender_id == data["tender_id"],
+                Bid.id != bid.id
+            ).all()
+            if b.submission_ip
+        }
+
+        bid.fraud_score = _calculate_fraud_score(
+            bid.bid_amount,
+            avg,
+            request_ip,
+            other_ips
+        )
+
         bid.is_flagged = bid.fraud_score >= 60
 
         db.session.commit()
+
         return bid
 
+    # -----------------------------
+    # GET SINGLE BID
+    # -----------------------------
     @staticmethod
     def get(bid_id):
         return BidRepository.get_by_id(bid_id)
 
+    # -----------------------------
+    # LIST CONTRACTOR BIDS
+    # -----------------------------
     @staticmethod
     def list_mine(contractor_id):
         return BidRepository.list_by_contractor(contractor_id)
 
+    # -----------------------------
+    # LIST TENDER BIDS
+    # -----------------------------
     @staticmethod
     def list_for_tender(tender_id):
         return BidRepository.list_by_tender(tender_id)
 
+    # -----------------------------
+    # LIST FLAGGED BIDS (ADMIN)
+    # -----------------------------
     @staticmethod
     def list_flagged():
         return BidRepository.list_flagged()
 
+    # -----------------------------
+    # UPDATE BID (SAFE)
+    # -----------------------------
     @staticmethod
     def update(bid, data, contractor_id):
+
         if bid.contractor_id != contractor_id:
             raise PermissionError("Only the bid owner can update")
+
         tender = TenderService.get(bid.tender_id)
+
         if tender and TenderService.is_deadline_passed(tender):
             raise ValueError("Cannot edit - tender deadline passed")
-        for k, v in data.items():
-            setattr(bid, k, v)
+
+        # ONLY allow safe fields
+        allowed_fields = {
+            "bid_amount",
+            "proposal_summary",
+            "completion_months"
+        }
+
+        for key, value in data.items():
+            if key in allowed_fields:
+                setattr(bid, key, value)
+
         return BidRepository.update(bid)
+
+    # -----------------------------
+    # EMPLOYER VIEW: ALL BIDS
+    # -----------------------------
     @staticmethod
     def list_employer_bids(employer_id):
 
         bids = (
             db.session.query(Bid)
-            .join(
-                Tender,
-                Bid.tender_id == Tender.id
-            )
-            .filter(
-                Tender.employer_id == employer_id
-            )
+            .join(Tender, Bid.tender_id == Tender.id)
+            .filter(Tender.employer_id == employer_id)
             .all()
         )
 
