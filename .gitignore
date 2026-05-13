@@ -7,20 +7,23 @@ env/
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
 
 # Database
 *.db
 *.sqlite
+*.sqlite3
 
 # Uploads — keep folder structure, ignore actual files
 uploads/*
 !uploads/.gitkeep
 
-# Flask instance folder
+# Flask instance
 instance/
 
 # Secrets
 .env
+.env.local
 
 # IDE
 .vscode/
@@ -31,5 +34,5 @@ instance/
 .DS_Store
 Thumbs.db
 
-# Nested clones (someone cloned the repo INSIDE the repo by accident)
+# Nested clones
 tender-explorer/
