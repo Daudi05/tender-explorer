@@ -6,8 +6,8 @@ from app.extensions import db
 class Bid(db.Model):
     __tablename__ = "bids"
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    tender_id = db.Column(db.String(36), nullable=False, index=True)
-    contractor_id = db.Column(db.String(36), nullable=False, index=True)
+    tender_id = db.Column(db.String(36),db.ForeignKey("tenders.id"), nullable=False, index=True)
+    contractor_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False, index=True)
     bid_amount = db.Column(db.Float, nullable=False)
     proposal_summary = db.Column(db.Text, nullable=True)
     completion_months = db.Column(db.Integer, nullable=True)
