@@ -23,3 +23,4 @@ class TenderAutoAwardService:
         db.session.commit()
 
         return winner
+    

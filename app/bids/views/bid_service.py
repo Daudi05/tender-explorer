@@ -6,11 +6,11 @@ from app.bids.models.bid_repo import BidRepository
 from app.tenders.views.tender_service import TenderService
 from app.tenders.models.tender import Tender
 from app.auth.models.user import User
+from app.tenders.views.auto_award_service import TenderAutoAwardService
 
 
-# -----------------------------
 # FRAUD SCORING ENGINE
-# -----------------------------
+
 def _calculate_fraud_score(bid_amount, tender_avg, submission_ip, other_ips):
     score = 0.0
 
@@ -30,9 +30,9 @@ def _calculate_fraud_score(bid_amount, tender_avg, submission_ip, other_ips):
     return min(score, 100)
 
 
-# -----------------------------
+
 # BID SERVICE
-# -----------------------------
+#
 class BidService:
 
     @staticmethod
@@ -70,10 +70,27 @@ class BidService:
             raise ValueError("You cannot bid on your own tender")
 
         # -----------------------------
+        # MAXIMUM BID LIMIT
+        # -----------------------------
+        current_bid_count = Bid.query.filter_by(
+            tender_id=data["tender_id"]
+        ).count()
+
+        if current_bid_count >= 10:
+            raise ValueError(
+                "This tender has reached the maximum number of bids"
+            )
+
+        # -----------------------------
         # DUPLICATE CHECK
         # -----------------------------
-        if BidRepository.existing(data["tender_id"], contractor_id):
-            raise ValueError("You already submitted a bid for this tender")
+        if BidRepository.existing(
+            data["tender_id"],
+            contractor_id
+        ):
+            raise ValueError(
+                "You already submitted a bid for this tender"
+            )
 
         # -----------------------------
         # CREATE BID
@@ -94,7 +111,9 @@ class BidService:
         # -----------------------------
         # FRAUD SCORING
         # -----------------------------
-        avg = db.session.query(func.avg(Bid.bid_amount)).filter(
+        avg = db.session.query(
+            func.avg(Bid.bid_amount)
+        ).filter(
             Bid.tender_id == data["tender_id"],
             Bid.id != bid.id
         ).scalar() or 0
@@ -118,11 +137,38 @@ class BidService:
 
         db.session.commit()
 
-        return bid
+        # -----------------------------
+        # AUTO CLOSE + AUTO AWARD
+        # -----------------------------
+        updated_bid_count = Bid.query.filter_by(
+            tender_id=data["tender_id"]
+        ).count()
 
-    # -----------------------------
-    # GET SINGLE BID
-    # -----------------------------
+        if updated_bid_count >= 10:
+
+            # Close and award automatically
+            winner = TenderAutoAwardService.close_and_award(
+                tender.id
+            )
+
+            return {
+                "message": "Bid submitted successfully. Tender automatically closed and awarded.",
+                "bid": bid,
+                "winner": winner
+            }
+
+        # -----------------------------
+        # NORMAL RESPONSE
+        # -----------------------------
+        return {
+            "message": "Bid submitted successfully",
+            "bid": bid
+        }
+            
+
+        # -----------------------------
+        # GET SINGLE BID
+        # -----------------------------
     @staticmethod
     def get(bid_id):
         return BidRepository.get_by_id(bid_id)
