@@ -1,3 +1,8 @@
+# Frontend
+node_modules
+dist
+.env.local
+
 # Python virtual environment
 venv/
 env/
@@ -23,7 +28,6 @@ instance/
 
 # Secrets
 .env
-.env.local
 
 # IDE
 .vscode/
