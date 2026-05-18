@@ -46,6 +46,20 @@ const data = await apiFetch('/documents/upload', {
 
 ---
 
+## Binary file download (responseType: 'blob')
+
+Use this for any endpoint that returns a file. Never use raw `fetch()` for downloads —
+it bypasses the 401 handler and requires manually reading `localStorage`.
+
+```js
+const blob = await apiFetch(`/documents/${id}/download`, {
+  responseType: 'blob',
+})
+downloadFile(blob, filename) // from src/utils/fileHelpers.js
+```
+
+---
+
 ## Error handling
 
 ```js

@@ -7,13 +7,14 @@ export const Button = ({
   size = 'md',        // sm, md, lg
   isLoading = false,
   isDisabled = false,
+  disabled = false,
   icon,
   onClick,
   className = '',
   ...props
 }) => {
   const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-md';
-  
+
   const variants = {
     primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:bg-blue-300',
     secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 disabled:bg-gray-300',
@@ -32,7 +33,7 @@ export const Button = ({
     <button
       type={type}
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-      disabled={isDisabled || isLoading}
+      disabled={isDisabled || disabled || isLoading}
       onClick={onClick}
       {...props}
     >
@@ -48,3 +49,5 @@ export const Button = ({
     </button>
   );
 };
+
+export default Button;

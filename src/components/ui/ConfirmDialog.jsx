@@ -5,27 +5,39 @@ import { Button } from './Button';
 export const ConfirmDialog = ({
   isOpen,
   onClose,
+  onCancel,
   onConfirm,
   title = 'Are you sure?',
   message = 'This action cannot be undone.',
+  confirmLabel,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
-  isDanger = false
+  confirmVariant,
+  isDanger = false,
+  confirmDisabled = false
 }) => {
+  const handleClose = onClose || onCancel;
+
   const footerActions = (
     <>
-      <Button variant="outline" onClick={onClose}>
+      <Button variant="outline" onClick={handleClose} isDisabled={confirmDisabled}>
         {cancelText}
       </Button>
-      <Button variant={isDanger ? 'danger' : 'primary'} onClick={onConfirm}>
-        {confirmText}
+      <Button
+        variant={confirmVariant || (isDanger ? 'danger' : 'primary')}
+        onClick={onConfirm}
+        isDisabled={confirmDisabled}
+      >
+        {confirmLabel || confirmText}
       </Button>
     </>
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} footer={footerActions} size="sm">
+    <Modal isOpen={isOpen} onClose={handleClose} title={title} footer={footerActions} size="sm">
       <p className="text-sm text-gray-600">{message}</p>
     </Modal>
   );
 };
+
+export default ConfirmDialog;

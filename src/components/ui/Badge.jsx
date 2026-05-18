@@ -19,3 +19,5 @@ export const Badge = ({
     </span>
   );
 };
+
+export default Badge;
