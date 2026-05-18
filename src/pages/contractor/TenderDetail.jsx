@@ -2,7 +2,7 @@ import '../stub.css'
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import apiFetch from '../../api/client';
+import {apiFetch} from '../../api/client';
 import { formatKES } from '../../utils/formatters';
 
 export default function TenderDetail() {
