@@ -1,9 +1,9 @@
-import axios from "axios"
+import { ApiFetch } from "../api/client"
 
-const API = "http://127.0.0.1:5000/api/bids"
+const API = "/api/v1/bids"
 
 export const getMyBids = async (token) => {
-  return await axios.get(`${API}/me`, {
+  return await ApiFetch.get(`${API}/me`, {
     headers: {
       Authorization: `Bearer ${token}`
     }
