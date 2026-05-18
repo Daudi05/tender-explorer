@@ -1,8 +1,8 @@
 /*
-  Skeleton.jsx — shimmer placeholder for loading states.
+  Skeleton.jsx
+  TEMPORARY: Replaced when abubakar/ui-library merges.
+  Prop API must match Abubakar's component exactly.
   Props: width, height, borderRadius — all CSS strings.
-  Using skeletons instead of a spinner on list pages makes the layout feel
-  stable while data loads (no layout shift once content arrives).
 */
 import './Skeleton.css'
 

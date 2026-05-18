@@ -1,11 +1,7 @@
 /*
-  useToast.js — minimal toast hook stub matching Abubakar's API.
-  Returns { toast } where toast(message, type) queues a notification.
-  The actual ToastContainer must be mounted at the app root (see Toast.jsx).
-
-  We use a simple event-bus pattern: hook dispatches a CustomEvent,
-  ToastContainer listens and renders. This avoids prop-drilling or a
-  separate context just for toasts.
+  useToast.js
+  TEMPORARY: Replaced when abubakar/ui-library merges.
+  Returns { toast(message, type) }. Dispatches a CustomEvent picked up by Toast.jsx.
 */
 export function useToast() {
   function toast(message, type = 'success') {

@@ -1,7 +1,7 @@
 /*
-  Toast.jsx — renders toast notifications triggered by useToast().
-  Mount this once in main.jsx or App.jsx so it's always on screen.
-  Listens for the "toast" CustomEvent dispatched by useToast.
+  Toast.jsx
+  TEMPORARY: Replaced when abubakar/ui-library merges.
+  Mount once in main.jsx. Listens for "toast" CustomEvent from useToast.
 */
 import { useState, useEffect } from 'react'
 import './Toast.css'

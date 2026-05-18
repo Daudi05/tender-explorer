@@ -1,7 +1,8 @@
 /*
-  Button.jsx — minimal stub until Abubakar ships the full UI library.
-  Matches the prop API Abubakar documented so our imports won't need to change.
-  Props: variant ("primary"|"danger"|"success"|"ghost"), size, disabled, onClick, children, type
+  Button.jsx
+  TEMPORARY: Replaced when abubakar/ui-library merges.
+  Prop API must match Abubakar's component exactly.
+  Props: variant ("primary"|"danger"|"success"|"ghost"), size ("sm"|"md"|"lg"), disabled, onClick, children, type
 */
 import './Button.css'
 

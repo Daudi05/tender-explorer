@@ -1,7 +1,8 @@
 /*
-  EmptyState.jsx — shown when a list has no items.
+  EmptyState.jsx
+  TEMPORARY: Replaced when abubakar/ui-library merges.
+  Prop API must match Abubakar's component exactly.
   Props: icon (SVG element), title, message, action (optional JSX button/link)
-  Consistent empty states prevent blank white voids that confuse users.
 */
 import './EmptyState.css'
 

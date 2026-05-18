@@ -1,5 +1,7 @@
 /*
-  Spinner.jsx — animated loading indicator.
+  Spinner.jsx
+  TEMPORARY: Replaced when abubakar/ui-library merges.
+  Prop API must match Abubakar's component exactly.
   Props: size ("sm"|"md"|"lg"), color (CSS color string, defaults to primary)
 */
 import './Spinner.css'
