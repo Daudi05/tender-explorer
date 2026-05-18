@@ -1,0 +1,78 @@
+.verify-docs-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
+}
+
+.verify-docs-header {
+  margin-bottom: var(--space-6);
+}
+.verify-docs-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+.verify-docs-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--space-1);
+}
+
+.verify-docs-tabs {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-4);
+  overflow-x: auto;
+}
+.verify-docs-tab {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+  transition: color var(--transition), border-color var(--transition);
+  margin-bottom: -1px;
+}
+.verify-docs-tab:hover { color: var(--color-text); }
+.verify-docs-tab--active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+.verify-docs-tab-count {
+  background: var(--color-surface-hover);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-full);
+  padding: 1px 6px;
+  font-size: var(--font-size-xs);
+}
+.verify-docs-tab--active .verify-docs-tab-count {
+  background: var(--color-primary-subtle);
+  color: var(--color-primary-active);
+}
+
+.verify-docs-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.verify-docs-row-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.verify-docs-row-wrapper > .doc-row { flex: 1; }
+
+.verify-docs-skeleton-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
