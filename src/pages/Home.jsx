@@ -2,10 +2,12 @@ import './stub.css'
 
 export default function Home() {
   return (
-    <div className="stub-page">
-      <h2>🚧 Home</h2>
-      <p>This page is being built</p>
-      <span className="owner">Owner: David</span>
+    <div style={{ padding: '2rem' }}>
+      <h1>Find Good Tenders. Win Big Contracts.</h1>
+
+      <p>
+        Transparent procurement platform that meets all your expectations.
+      </p>
     </div>
-  )
+  );
 }

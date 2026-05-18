@@ -1,11 +1,38 @@
-import '../stub.css'
+import { useEffect, useState } from "react"
+import { getMyBids } from "../../services/bidService"
 
 export default function MyBids() {
+
+  const [bids, setBids] = useState([])
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem("token")
+
+      const res = await getMyBids(token)
+
+      setBids(res.data.bids)
+
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
   return (
-    <div className="stub-page">
-      <h2>🚧 My Bids</h2>
-      <p>This page is being built</p>
-      <span className="owner">Owner: Allan</span>
+    <div>
+      <h1>My Bids</h1>
+
+      {bids.map((bid) => (
+        <div key={bid.id}>
+          <p>Amount: {bid.bid_amount}</p>
+          <p>Status: {bid.status}</p>
+          <p>Fraud: {bid.fraud_score}</p>
+        </div>
+      ))}
     </div>
   )
 }

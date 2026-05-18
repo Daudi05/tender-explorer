@@ -1,3 +1,4 @@
+
 from flask import jsonify
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
@@ -19,7 +20,6 @@ def register_error_handlers(app):
             "success": False,
             "message": "Unauthorized"
         }), 401
-
 
     @app.errorhandler(403)
     def forbidden(error):
@@ -85,3 +85,4 @@ def register_error_handlers(app):
             "success": False,
             "message": str(error)
         }), 500
+

@@ -1,3 +1,4 @@
+
 """
 Flask application factory.
 
@@ -9,11 +10,13 @@ from flask import Flask
 from config import Config
 from app.extensions import db, jwt, ma, bcrypt
 from app.middleware.error_middleware import register_error_handlers
+from flask_cors import CORS
 
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    CORS(app)
 
     # Initialize all extensions
     db.init_app(app)
@@ -33,11 +36,11 @@ def create_app():
     from app.documents.controllers.document_routes import documents_bp
     from app.notifications.controllers.notification_routes import notifications_bp
 
-    app.register_blueprint(auth_bp, url_prefix="/api/auth")
-    app.register_blueprint(tenders_bp, url_prefix="/api/v1/tenders")
-    app.register_blueprint(bids_bp, url_prefix="/api/v1/bids")
-    app.register_blueprint(documents_bp, url_prefix="/api/v1/documents")
-    app.register_blueprint(notifications_bp, url_prefix="/api/v1/notifications")
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(tenders_bp)
+    app.register_blueprint(bids_bp)
+    app.register_blueprint(documents_bp)
+    app.register_blueprint(notifications_bp)
 
     #  Create database tables 
     
@@ -48,5 +51,30 @@ def create_app():
         from app.documents.models.document import Document
         from app.notifications.models.notification import Notification
         db.create_all()
+from flask import Flask
+from app.extensions import db, ma, jwt, migrate
+from app.middleware.error_middleware import register_error_handlers
+import os
+
+def create_app():
+    app = Flask(__name__)
+    
+    # Configurations
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'mysql+pymysql://root:password@localhost/tender_db')
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'group6-secret-key')
+
+    # Initializing  Extensions
+    db.init_app(app)
+    ma.init_app(app)
+    jwt.init_app(app)
+    migrate.init_app(app, db)
+
+    # Register Global Error Handlings here later 
+    register_error_handlers(app)
+
+    # To be filled later here for the blueprints 
+    # app.register_blueprint(auth_bp)
+    # app.register_blueprint(tender_bp)
 
     return app
