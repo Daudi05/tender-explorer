@@ -127,7 +127,7 @@
   background: var(--color-success-bg);
   border: 1px solid var(--color-success-light);
   border-radius: var(--radius);
-  color: #065f46;
+  color: var(--color-success);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
 }

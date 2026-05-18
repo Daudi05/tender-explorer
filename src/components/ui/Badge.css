@@ -9,7 +9,9 @@
   white-space: nowrap;
 }
 .ui-badge--default { background: var(--color-surface-hover); color: var(--color-text-secondary); }
-.ui-badge--success { background: var(--color-success-light); color: #065f46; }
-.ui-badge--warning { background: var(--color-warning-light); color: #92400e; }
-.ui-badge--danger  { background: var(--color-danger-light);  color: #991b1b; }
-.ui-badge--info    { background: var(--color-info-light);    color: #155e75; }
+/* Text colors use slightly darker shades of each token for readable contrast on light backgrounds.
+   These are the only values that don't have direct CSS variable equivalents in globals.css. */
+.ui-badge--success { background: var(--color-success-bg);  color: var(--color-success); }
+.ui-badge--warning { background: var(--color-warning-bg);  color: var(--color-warning); }
+.ui-badge--danger  { background: var(--color-danger-bg);   color: var(--color-danger); }
+.ui-badge--info    { background: var(--color-info-light);  color: var(--color-info); }
