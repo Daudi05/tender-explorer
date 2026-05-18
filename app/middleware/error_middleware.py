@@ -20,7 +20,6 @@ def register_error_handlers(app):
             "message": "Unauthorized"
         }), 401
 
-
     @app.errorhandler(403)
     def forbidden(error):
         return jsonify({
