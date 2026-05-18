@@ -10,11 +10,13 @@ from flask import Flask
 from config import Config
 from app.extensions import db, jwt, ma, bcrypt
 from app.middleware.error_middleware import register_error_handlers
+from flask_cors import CORS
 
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    CORS(app)
 
     # Initialize all extensions
     db.init_app(app)
@@ -34,11 +36,11 @@ def create_app():
     from app.documents.controllers.document_routes import documents_bp
     from app.notifications.controllers.notification_routes import notifications_bp
 
-    app.register_blueprint(auth_bp, url_prefix="/api/auth")
-    app.register_blueprint(tenders_bp, url_prefix="/api/v1/tenders")
-    app.register_blueprint(bids_bp, url_prefix="/api/v1/bids")
-    app.register_blueprint(documents_bp, url_prefix="/api/v1/documents")
-    app.register_blueprint(notifications_bp, url_prefix="/api/v1/notifications")
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(tenders_bp)
+    app.register_blueprint(bids_bp)
+    app.register_blueprint(documents_bp)
+    app.register_blueprint(notifications_bp)
 
     #  Create database tables 
     

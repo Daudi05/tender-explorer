@@ -110,8 +110,8 @@ export default function Register() {
             value={form.role}
             onChange={handleChange}
           >
-            <option value="CONTRACTOR">Contractor</option>
-            <option value="EMPLOYER">Employer</option>
+            <option value="CONTRACTOR">CONTRACTOR</option>
+            <option value="EMPLOYER">EMPLOYER</option>
           </select>
 
           <button type="submit" disabled={loading}>

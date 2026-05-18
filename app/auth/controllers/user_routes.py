@@ -12,18 +12,45 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 @auth_bp.route("/register", methods=["POST"])
 def register():
     try:
+        print("RAW:", request.get_json())
+
         data = register_schema.load(request.get_json() or {})
+
+        print("VALIDATED:", data)
+
+        user, token = AuthService.register(
+            data,
+            request.remote_addr
+        )
+
+        return jsonify({
+            "message": "Registered. Check email to verify.",
+            "user": user_response_schema.dump(user),
+            "verification_token": token,
+        }), 201
+
     except ValidationError as err:
-        return jsonify({"error": "Validation failed", "details": err.messages}), 422
-    try:
-        user, token = AuthService.register(data, request.remote_addr)
+        print("VALIDATION ERROR:", err.messages)
+
+        return jsonify({
+            "error": "Validation failed",
+            "details": err.messages
+        }), 422
+
     except ValueError as e:
-        return jsonify({"error": str(e)}), 400
-    return jsonify({
-        "message": "Registered. Check email to verify.",
-        "user": user_response_schema.dump(user),
-        "verification_token": token,
-    }), 201
+        print("VALUE ERROR:", str(e))
+
+        return jsonify({
+            "error": str(e)
+        }), 400
+
+    except Exception as e:
+        print("SERVER ERROR:", str(e))
+
+        return jsonify({
+            "error": "Internal server error",
+            "details": str(e)
+        }), 500
 
 
 @auth_bp.route("/login", methods=["POST"])
