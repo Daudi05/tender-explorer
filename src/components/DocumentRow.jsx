@@ -20,6 +20,7 @@
     showUploader {boolean}          — show the uploader's name (admin view only)
     onDelete    {function(id)|null}  — callback to delete this document
     onVerify    {function(id, status)|null} — callback to verify/reject (admin only)
+    verifyingIds {Set}              — IDs of documents with a PATCH in flight; buttons are disabled
 */
 import VerificationBadge from './VerificationBadge'
 import Button from './ui/Button'
@@ -44,7 +45,7 @@ const TYPE_LABELS = {
   AWARD_LETTER: 'Award Letter',
 }
 
-export default function DocumentRow({ document, showUploader = false, onDelete, onVerify }) {
+export default function DocumentRow({ document, showUploader = false, onDelete, onVerify, verifyingIds = new Set() }) {
   const { id, original_filename, file_size, document_type, verification_status, created_at, uploader_name } = document
 
   // Format the upload date — just the date, no time (the exact time is rarely useful)
@@ -87,18 +88,18 @@ export default function DocumentRow({ document, showUploader = false, onDelete, 
               variant="success"
               size="sm"
               onClick={() => onVerify(id, 'verified')}
-              // Don't allow re-verifying something already verified
-              disabled={verification_status === 'verified'}
+              // Disabled if already verified OR if a PATCH is currently in flight for this row
+              disabled={verification_status === 'verified' || verifyingIds.has(id)}
             >
-              ✓ Verify
+              {verifyingIds.has(id) ? '…' : '✓ Verify'}
             </Button>
             <Button
               variant="danger"
               size="sm"
               onClick={() => onVerify(id, 'rejected')}
-              disabled={verification_status === 'rejected'}
+              disabled={verification_status === 'rejected' || verifyingIds.has(id)}
             >
-              ✕ Reject
+              {verifyingIds.has(id) ? '…' : '✕ Reject'}
             </Button>
           </>
         )}

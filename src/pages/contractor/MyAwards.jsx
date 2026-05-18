@@ -25,6 +25,7 @@
 import { useState, useEffect } from 'react'
 import { apiFetch } from '../../api/client'
 import { downloadFile } from '../../utils/fileHelpers'
+// Note: no raw fetch() or localStorage access — apiFetch handles auth for blobs too.
 import Button from '../../components/ui/Button'
 import Skeleton from '../../components/ui/Skeleton'
 import EmptyState from '../../components/ui/EmptyState'
@@ -38,6 +39,9 @@ export default function MyAwards() {
   const [awards, setAwards]         = useState([])
   const [loading, setLoading]       = useState(true)
 
+  // Tracks a fetch error — prevents showing "No awards yet" when the fetch actually broke
+  const [fetchError, setFetchError] = useState(null)
+
   // Track which award's letter is being downloaded
   const [downloading, setDownloading] = useState(null)
 
@@ -47,12 +51,10 @@ export default function MyAwards() {
 
   async function loadAwards() {
     setLoading(true)
+    setFetchError(null)
     try {
-      // Step 1: get all my bids
       const bidsData = await apiFetch('/bids/me')
       const allBids = Array.isArray(bidsData) ? bidsData : bidsData.bids ?? []
-
-      // Step 2: filter to winning bids only — see comment at top of file
       const winningBids = allBids.filter((b) => b.is_winner === true)
 
       if (winningBids.length === 0) {
@@ -61,16 +63,21 @@ export default function MyAwards() {
         return
       }
 
-      // Step 3: fetch all tender details in parallel — see comment at top of file
-      const tenders = await Promise.all(
+      // Use Promise.allSettled instead of Promise.all so one failed tender fetch
+      // doesn't wipe out all successfully loaded awards.
+      // fulfilled entries get displayed; rejected ones are silently skipped.
+      const results = await Promise.allSettled(
         winningBids.map((bid) => apiFetch(`/tenders/${bid.tender_id}`))
       )
 
-      // Step 4: zip bids and tenders together into a single array of { bid, tender }
-      const combined = winningBids.map((bid, i) => ({ bid, tender: tenders[i] }))
+      const combined = winningBids
+        .map((bid, i) => ({ bid, result: results[i] }))
+        .filter(({ result }) => result.status === 'fulfilled')
+        .map(({ bid, result }) => ({ bid, tender: result.value }))
+
       setAwards(combined)
     } catch (err) {
-      toast('Failed to load awards', 'error')
+      setFetchError(err.message || 'Failed to load awards')
     } finally {
       setLoading(false)
     }
@@ -91,14 +98,10 @@ export default function MyAwards() {
         return
       }
 
-      // Download the letter blob — needs auth header (same pattern as MyDocuments)
-      const token = localStorage.getItem('token')
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000/api'}/documents/${letter.id}/download`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      if (!response.ok) throw new Error('Download failed')
-      const blob = await response.blob()
+      // Use apiFetch with responseType:'blob' — handles auth token and 401 automatically
+      const blob = await apiFetch(`/documents/${letter.id}/download`, {
+        responseType: 'blob',
+      })
       downloadFile(blob, letter.original_filename)
     } catch (err) {
       toast('Failed to download award letter', 'error')
@@ -129,6 +132,19 @@ export default function MyAwards() {
               <Skeleton width="40%" height="14px" />
             </div>
           ))}
+        </div>
+      </div>
+    )
+  }
+
+  // Error state — not an empty state, the fetch actually failed
+  if (fetchError) {
+    return (
+      <div className="my-awards-page">
+        <h1 className="my-awards-title">My Awards</h1>
+        <div className="my-awards-error" role="alert">
+          <p>{fetchError}</p>
+          <button className="my-awards-retry" onClick={loadAwards}>Retry</button>
         </div>
       </div>
     )

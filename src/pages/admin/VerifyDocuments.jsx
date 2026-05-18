@@ -26,6 +26,7 @@
 import { useState, useEffect } from 'react'
 import { apiFetch } from '../../api/client'
 import { downloadFile } from '../../utils/fileHelpers'
+// Note: no longer using raw fetch() or touching localStorage for downloads.
 import DocumentRow from '../../components/DocumentRow'
 import Button from '../../components/ui/Button'
 import Skeleton from '../../components/ui/Skeleton'
@@ -41,6 +42,7 @@ export default function VerifyDocuments() {
   // All documents across all users — fetched once on mount
   const [documents, setDocuments]       = useState([])
   const [loading, setLoading]           = useState(true)
+  const [fetchError, setFetchError]     = useState(null)
 
   // Default to "pending" so admin immediately sees documents awaiting action
   const [activeFilter, setActiveFilter] = useState('pending')
@@ -48,33 +50,44 @@ export default function VerifyDocuments() {
   // Track which document is being downloaded (for per-row loading state)
   const [downloading, setDownloading]   = useState(null)
 
+  // Set of document IDs that have a verify/reject PATCH in flight.
+  // Using a Set so we can track multiple rows simultaneously — admin might
+  // verify row 1 and then immediately click row 2 before row 1 responds.
+  // Without this, rapid clicks on the same row send conflicting PATCHes.
+  const [verifying, setVerifying] = useState(new Set())
+
   useEffect(() => {
     fetchAllDocuments()
   }, [])
 
   async function fetchAllDocuments() {
     setLoading(true)
+    setFetchError(null)
     try {
       // Admin endpoint returns all documents, not just the logged-in user's
       const data = await apiFetch('/documents/me') // backend returns all for admin role
       setDocuments(Array.isArray(data) ? data : data.documents ?? [])
     } catch (err) {
-      toast('Failed to load documents', 'error')
+      setFetchError(err.message || 'Failed to load documents')
     } finally {
       setLoading(false)
     }
   }
 
-  // Optimistically update a document's status in local state before server confirms.
-  // If server call fails, we revert to the previous status and show an error.
+  // Optimistically update a document's status, guarded against rapid double-clicks.
   async function handleVerify(id, newStatus) {
-    // Save the current status in case we need to revert
+    // Prevent a second PATCH on the same document while the first is in flight
+    if (verifying.has(id)) return
+
     const previous = documents.find((d) => d.id === id)?.verification_status
 
     // Optimistic update — update the UI immediately
     setDocuments((prev) =>
       prev.map((d) => d.id === id ? { ...d, verification_status: newStatus } : d)
     )
+
+    // Mark this document as in-flight — disables both Verify and Reject buttons on this row
+    setVerifying((prev) => new Set(prev).add(id))
 
     try {
       await apiFetch(`/documents/${id}/verify`, {
@@ -88,20 +101,19 @@ export default function VerifyDocuments() {
         prev.map((d) => d.id === id ? { ...d, verification_status: previous } : d)
       )
       toast(err.message || `Failed to ${newStatus} document`, 'error')
+    } finally {
+      // Remove from in-flight set regardless of success or failure
+      setVerifying((prev) => { const s = new Set(prev); s.delete(id); return s })
     }
   }
 
-  // Download with auth header — same pattern as MyDocuments
+  // Download with apiFetch responseType:'blob' — no raw fetch(), no localStorage access.
   async function handleDownload(doc) {
     setDownloading(doc.id)
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000/api'}/documents/${doc.id}/download`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      if (!response.ok) throw new Error('Download failed')
-      const blob = await response.blob()
+      const blob = await apiFetch(`/documents/${doc.id}/download`, {
+        responseType: 'blob',
+      })
       downloadFile(blob, doc.original_filename)
     } catch (err) {
       toast('Download failed', 'error')
@@ -148,6 +160,12 @@ export default function VerifyDocuments() {
 
       {/* Document list */}
       <div className="verify-docs-list">
+        {fetchError && !loading && (
+          <div className="verify-docs-error" role="alert">
+            <span>{fetchError}</span>
+            <button className="verify-docs-retry" onClick={fetchAllDocuments}>Retry</button>
+          </div>
+        )}
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="verify-docs-skeleton-row">
@@ -155,7 +173,7 @@ export default function VerifyDocuments() {
               <Skeleton width="35%" height="12px" />
             </div>
           ))
-        ) : filteredDocs.length === 0 ? (
+        ) : fetchError ? null : filteredDocs.length === 0 ? (
           <EmptyState
             icon={
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true">
@@ -171,7 +189,8 @@ export default function VerifyDocuments() {
             <div key={doc.id} className="verify-docs-row-wrapper">
               <DocumentRow
                 document={doc}
-                showUploader={true}  // Admin needs to know who uploaded what
+                showUploader={true}
+                verifyingIds={verifying}  // disables buttons while PATCH is in flight
                 onVerify={handleVerify}
               />
               <Button

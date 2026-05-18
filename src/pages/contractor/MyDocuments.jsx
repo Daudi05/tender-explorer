@@ -25,6 +25,8 @@
 import { useState, useEffect } from 'react'
 import { apiFetch } from '../../api/client'
 import { downloadFile } from '../../utils/fileHelpers'
+// Note: no longer importing BASE_URL or touching localStorage for downloads.
+// apiFetch now supports responseType:'blob' — see src/api/USAGE.md.
 import DocumentRow from '../../components/DocumentRow'
 import DocumentUploader from '../../components/DocumentUploader'
 import Modal from '../../components/ui/Modal'
@@ -48,6 +50,10 @@ export default function MyDocuments() {
   // Whether the initial fetch is in progress — shows skeleton rows
   const [loading, setLoading]         = useState(true)
 
+  // Tracks a fetch error — if set, we show an error banner instead of an empty list.
+  // Without this, a network error would show "No documents yet" which is actively misleading.
+  const [fetchError, setFetchError]   = useState(null)
+
   // Active filter tab — "all" shows everything
   const [activeFilter, setActiveFilter] = useState('all')
 
@@ -56,6 +62,11 @@ export default function MyDocuments() {
 
   // ID of the document the user wants to delete — null means no dialog shown
   const [deleteTargetId, setDeleteTargetId] = useState(null)
+
+  // Whether a DELETE request is in flight.
+  // Without this, the ConfirmDialog's button can be clicked twice before the first
+  // request finishes, sending two DELETE calls and likely producing a 404 on the second.
+  const [deleting, setDeleting] = useState(false)
 
   // Whether a download is in progress for a specific document ID.
   // We track per-ID so we can show a spinner on the right row.
@@ -68,12 +79,13 @@ export default function MyDocuments() {
 
   async function fetchDocuments() {
     setLoading(true)
+    setFetchError(null) // clear previous error on retry
     try {
       const data = await apiFetch('/documents/me')
-      // Backend returns { documents: [...] } or just [...] — handle both
       setDocuments(Array.isArray(data) ? data : data.documents ?? [])
     } catch (err) {
-      toast('Failed to load documents', 'error')
+      // Store the error so the list area shows a banner, not a misleading empty state
+      setFetchError(err.message || 'Failed to load documents')
     } finally {
       setLoading(false)
     }
@@ -89,19 +101,14 @@ export default function MyDocuments() {
   }
 
   // Download a document as an authenticated blob.
-  // We can't use a plain <a href> because the endpoint requires Authorization header.
+  // Uses apiFetch with responseType:'blob' — no raw fetch(), no direct localStorage access.
+  // apiFetch handles the Bearer token and 401 redirect automatically.
   async function handleDownload(doc) {
     setDownloading(doc.id)
     try {
-      // We need the raw Response (not parsed JSON) for binary file download,
-      // so we bypass apiFetch and use fetch directly with the auth header
-      const token = localStorage.getItem('token')
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000/api'}/documents/${doc.id}/download`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      if (!response.ok) throw new Error('Download failed')
-      const blob = await response.blob()
+      const blob = await apiFetch(`/documents/${doc.id}/download`, {
+        responseType: 'blob',
+      })
       downloadFile(blob, doc.original_filename)
     } catch (err) {
       toast('Download failed. Please try again.', 'error')
@@ -116,8 +123,11 @@ export default function MyDocuments() {
   }
 
   async function handleConfirmDelete() {
+    // Guard against double-submit — the button is disabled while deleting=true
+    if (deleting) return
     const id = deleteTargetId
     setDeleteTargetId(null) // close dialog immediately so it feels responsive
+    setDeleting(true)
 
     try {
       await apiFetch(`/documents/${id}`, { method: 'DELETE' })
@@ -126,6 +136,8 @@ export default function MyDocuments() {
       await fetchDocuments()
     } catch (err) {
       toast(err.message || 'Failed to delete document', 'error')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -173,15 +185,21 @@ export default function MyDocuments() {
 
       {/* Document list */}
       <div className="my-docs-list">
+        {/* Error banner — shown when the initial fetch failed, not a misleading empty state */}
+        {fetchError && !loading && (
+          <div className="my-docs-error" role="alert">
+            <span>{fetchError}</span>
+            <button className="my-docs-retry" onClick={fetchDocuments}>Retry</button>
+          </div>
+        )}
         {loading ? (
-          // Skeleton rows — 5 placeholders while data loads
           Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="my-docs-skeleton-row">
               <Skeleton width="60%" height="16px" />
               <Skeleton width="30%" height="12px" />
             </div>
           ))
-        ) : filteredDocs.length === 0 ? (
+        ) : fetchError ? null : filteredDocs.length === 0 ? (
           <EmptyState
             icon={
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true">
@@ -224,14 +242,15 @@ export default function MyDocuments() {
         <DocumentUploader onUploadSuccess={handleUploadSuccess} />
       </Modal>
 
-      {/* Delete confirmation dialog */}
+      {/* Delete confirmation dialog — confirmLabel changes while request is in flight */}
       <ConfirmDialog
         isOpen={deleteTargetId !== null}
         onConfirm={handleConfirmDelete}
-        onCancel={() => setDeleteTargetId(null)}
+        onCancel={() => !deleting && setDeleteTargetId(null)}
         message="Are you sure you want to delete this document? This cannot be undone."
-        confirmLabel="Delete"
+        confirmLabel={deleting ? 'Deleting…' : 'Delete'}
         confirmVariant="danger"
+        confirmDisabled={deleting}
       />
     </div>
   )
