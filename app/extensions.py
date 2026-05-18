@@ -1,3 +1,4 @@
+
 """
 Centralized Flask extension instances.
 All modules import their dependencies from here so each
@@ -19,3 +20,14 @@ db = SQLAlchemy()
 jwt = JWTManager()
 ma = Marshmallow()
 bcrypt = Bcrypt()
+#everyone to import db ,marshmallow and jwt extensions from here 
+from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
+from flask_jwt_extended import JWTManager
+from flask_migrate import Migrate
+
+db = SQLAlchemy()
+ma = Marshmallow()
+jwt = JWTManager()
+migrate = Migrate()
+
