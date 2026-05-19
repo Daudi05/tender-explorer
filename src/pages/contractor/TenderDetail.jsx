@@ -7,6 +7,7 @@ import { apiFetch } from "../../api/client"
 import { formatKES } from "../../utils/formatters"
 
 export default function TenderDetail() {
+
   const { id } = useParams()
 
   const [tender, setTender] = useState(null)
@@ -14,80 +15,140 @@ export default function TenderDetail() {
 
   const [message, setMessage] = useState(null)
 
+  const [file, setFile] = useState(null)
+
+  const [documentType, setDocumentType] = useState("")
+
+  const [submitting, setSubmitting] = useState(false)
+
   const [form, setForm] = useState({
     bid_amount: "",
     proposal_summary: "",
     completion_months: "",
   })
 
-  // ================= FETCH TENDER =================
+  // ==================================================
+  // FETCH TENDER
+  // ==================================================
   useEffect(() => {
     fetchTender()
   }, [])
 
   async function fetchTender() {
+
     try {
+
       setLoading(true)
 
       const data = await apiFetch(`/api/tenders/${id}`)
 
       setTender(data.tender)
+
     } catch (error) {
+
       console.error(error)
 
       setMessage({
         type: "error",
         text: "Failed to load tender",
       })
+
     } finally {
+
       setLoading(false)
     }
   }
 
-  // ================= HANDLE INPUTS =================
+  // ==================================================
+  // HANDLE INPUT CHANGES
+  // ==================================================
   function handleChange(e) {
+
     setForm({
       ...form,
       [e.target.name]: e.target.value,
     })
   }
 
-  // ================= SUBMIT BID =================
+  // ==================================================
+  // SUBMIT BID
+  // ==================================================
   async function submitBid(e) {
+
     e.preventDefault()
 
     try {
+
+      setSubmitting(true)
+
       setMessage(null)
 
-      const payload = {
-        tender_id: id,
-        bid_amount: Number(form.bid_amount),
-        proposal_summary: form.proposal_summary.trim(),
-        completion_months: Number(form.completion_months),
+      const formData = new FormData()
+
+      // REQUIRED FIELDS
+      formData.append("tender_id", id)
+
+      formData.append(
+        "bid_amount",
+        form.bid_amount
+      )
+
+      formData.append(
+        "proposal_summary",
+        form.proposal_summary
+      )
+
+      formData.append(
+        "completion_months",
+        form.completion_months
+      )
+
+      // OPTIONAL DOCUMENT
+      if (file) {
+
+        formData.append("file", file)
+
+        formData.append(
+          "document_type",
+          documentType || "BID_SUPPORT_DOCUMENT"
+        )
       }
 
-      await apiFetch("/api/bids", {
+      // DEBUG
+      for (let pair of formData.entries()) {
+        console.log(pair[0], pair[1])
+      }
+
+      const response = await apiFetch("/api/bids", {
         method: "POST",
-        body: JSON.stringify(payload),
+        body: formData,
       })
+
+      console.log(response)
 
       setMessage({
         type: "success",
         text: "Bid submitted successfully",
       })
 
+      // RESET FORM
       setForm({
         bid_amount: "",
         proposal_summary: "",
         completion_months: "",
       })
 
+      setFile(null)
+
+      setDocumentType("")
+
     } catch (error) {
-      console.error(error)
+
+      console.error("FULL ERROR:", error)
 
       const backendMessage =
-        error?.data?.details ||
-        error?.data?.error ||
+        error?.details ||
+        error?.error ||
         error?.message
 
       setMessage({
@@ -97,20 +158,30 @@ export default function TenderDetail() {
             ? JSON.stringify(backendMessage)
             : backendMessage || "Bid failed",
       })
+
+    } finally {
+
+      setSubmitting(false)
     }
   }
 
-  // ================= LOADING =================
+  // ==================================================
+  // LOADING
+  // ==================================================
   if (loading) {
+
     return (
       <div className="dashboard-page">
-        <p>Loading...</p>
+        <p>Loading tender...</p>
       </div>
     )
   }
 
-  // ================= NO TENDER =================
+  // ==================================================
+  // NO TENDER
+  // ==================================================
   if (!tender) {
+
     return (
       <div className="dashboard-page">
         <p>Tender not found</p>
@@ -118,10 +189,16 @@ export default function TenderDetail() {
     )
   }
 
+  // ==================================================
+  // UI
+  // ==================================================
   return (
+
     <div className="dashboard-page">
 
-      {/* ================= TENDER DETAILS ================= */}
+      {/* ================================================== */}
+      {/* TENDER DETAILS */}
+      {/* ================================================== */}
       <div className="dashboard-section">
 
         <h1>{tender.title}</h1>
@@ -144,13 +221,18 @@ export default function TenderDetail() {
 
       </div>
 
-      {/* ================= BID FORM ================= */}
+      {/* ================================================== */}
+      {/* BID FORM */}
+      {/* ================================================== */}
       <div className="dashboard-section">
 
         <h2>Submit Bid</h2>
 
-        {/* ================= MESSAGE ================= */}
+        {/* ================================================== */}
+        {/* MESSAGE */}
+        {/* ================================================== */}
         {message && (
+
           <div
             style={{
               padding: "12px",
@@ -175,7 +257,10 @@ export default function TenderDetail() {
           </div>
         )}
 
-        <form onSubmit={submitBid} className="bid-form">
+        <form
+          onSubmit={submitBid}
+          className="bid-form"
+        >
 
           <input
             type="number"
@@ -203,8 +288,49 @@ export default function TenderDetail() {
             required
           />
 
-          <button type="submit">
-            Submit Bid
+          {/* ================================================== */}
+          {/* DOCUMENT TYPE */}
+          {/* ================================================== */}
+          <select
+            value={documentType}
+            onChange={(e) => setDocumentType(e.target.value)}
+          >
+            <option value="">
+              Select Document Type
+            </option>
+
+            <option value="BUSINESS_PERMIT">
+              Business Permit
+            </option>
+
+            <option value="TAX_COMPLIANCE">
+              Tax Compliance
+            </option>
+
+            <option value="NCA_CERTIFICATE">
+              NCA Certificate
+            </option>
+
+            <option value="PORTFOLIO">
+              Portfolio
+            </option>
+          </select>
+
+          {/* ================================================== */}
+          {/* FILE */}
+          {/* ================================================== */}
+          <input
+            type="file"
+            onChange={(e) => setFile(e.target.files[0])}
+          />
+
+          <button
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting
+              ? "Submitting..."
+              : "Submit Bid"}
           </button>
 
         </form>
