@@ -1,0 +1,174 @@
+.award-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
+}
+
+/* Header */
+.award-header { margin-bottom: var(--space-8); }
+.award-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-1);
+}
+.award-tender-name {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin-bottom: var(--space-2);
+}
+.award-tender-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  flex-wrap: wrap;
+}
+.award-dot { opacity: 0.4; }
+
+/* Sections */
+.award-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+.award-section-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.award-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+}
+.award-step-done {
+  font-size: var(--font-size-sm);
+  color: var(--color-success);
+  font-weight: var(--font-weight-medium);
+  margin-left: var(--space-2);
+}
+.award-section-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-4);
+  line-height: 1.6;
+}
+
+/* Bid table */
+.award-bids-table-wrapper { overflow-x: auto; }
+.award-bids-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+.award-bids-table th {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+.award-bid-row {
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.award-bid-row td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+.award-bid-row:hover { background: var(--color-surface-hover); }
+.award-bid-row--selected { background: var(--color-primary-light); }
+.award-bid-row--selected:hover { background: var(--color-primary-subtle); }
+.award-bid-row--flagged { opacity: 0.7; }
+.award-bid-contractor { font-weight: var(--font-weight-medium); color: var(--color-text); }
+.award-bid-amount { font-weight: var(--font-weight-semibold); color: var(--color-text); }
+.award-bid-proposal {
+  color: var(--color-text-secondary);
+  max-width: 260px;
+  line-height: 1.4;
+}
+.award-bid-no-proposal { color: var(--color-text-muted); font-style: italic; }
+.award-no-bids { color: var(--color-text-muted); font-size: var(--font-size-sm); }
+
+/* Fraud flag */
+.award-fraud-flag {
+  font-size: var(--font-size-xs);
+  color: var(--color-warning);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Award letter uploaded confirmation */
+.award-letter-uploaded {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-light);
+  border-radius: var(--radius);
+  color: var(--color-success);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+.award-letter-replace {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  text-decoration: underline;
+}
+
+/* Confirm section */
+.award-confirm-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+.award-summary {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  background: var(--color-primary-light);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius);
+}
+.award-requirements {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* Loading / error states */
+.award-skeleton { display: flex; flex-direction: column; gap: var(--space-4); }
+.award-error, .award-already-awarded {
+  text-align: center;
+  padding: var(--space-16);
+  color: var(--color-text-secondary);
+}
+.award-error p, .award-already-awarded p { margin-bottom: var(--space-4); }
+.award-already-awarded h2 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-2);
+}
