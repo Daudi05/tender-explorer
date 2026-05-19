@@ -14,27 +14,32 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  border-radius: 12px;
+  border-radius: var(--radius);
   font-size: 0.875rem;
   font-weight: 600;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-lg);
   animation: toastIn 250ms ease;
   max-width: 360px;
   pointer-events: all;
 }
 
 .toast-pill--success {
-  background: linear-gradient(135deg, #059669, #10b981);
+  background: var(--color-success);
   color: #fff;
 }
 
 .toast-pill--error {
-  background: linear-gradient(135deg, #dc2626, #ef4444);
+  background: var(--color-danger);
   color: #fff;
 }
 
 .toast-pill--info {
-  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  background: var(--color-info);
+  color: #fff;
+}
+
+.toast-pill--warning {
+  background: var(--color-warning);
   color: #fff;
 }
 

@@ -64,14 +64,13 @@ export default function MyTenders() {
           onClick={() => navigate('/employer/create-tender')}
           style={{
             padding: '0.6rem 1.25rem',
-            background: 'linear-gradient(135deg, #7c3aed, #2563eb)',
+            background: 'var(--color-primary)',
             color: '#fff',
             border: 'none',
             borderRadius: 10,
             fontWeight: 600,
             cursor: 'pointer',
             fontSize: '0.9rem',
-            boxShadow: '0 4px 12px rgba(124,58,237,0.3)',
           }}
         >
           + New Tender
@@ -112,13 +111,13 @@ export default function MyTenders() {
                     <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                       <button
                         onClick={() => navigate(`/employer/tenders/${tender.id}/bids`)}
-                        style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #c4b5fd', background: '#f5f3ff', color: '#7c3aed', fontWeight: 600, cursor: 'pointer', fontSize: '0.8rem' }}
+                        style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid var(--color-primary-light)', background: 'var(--color-primary-subtle)', color: 'var(--color-primary)', fontWeight: 600, cursor: 'pointer', fontSize: '0.8rem' }}
                       >
                         View Bids
                       </button>
                       <button
                         onClick={() => navigate(`/employer/award/${tender.id}`)}
-                        style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', fontWeight: 600, cursor: 'pointer', fontSize: '0.8rem' }}
+                        style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-surface-hover)', color: 'var(--color-text)', fontWeight: 600, cursor: 'pointer', fontSize: '0.8rem' }}
                       >
                         Award
                       </button>
