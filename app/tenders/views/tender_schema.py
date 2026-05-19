@@ -11,6 +11,8 @@ class TenderResponseSchema(Schema):
     deadline = fields.DateTime()
     employer_id = fields.Str()
     status = fields.Str()
+    winning_bid_id = fields.Str(allow_none=True)
+    awarded_at = fields.DateTime(allow_none=True)
     created_at = fields.DateTime()
 
 
@@ -34,6 +36,7 @@ class TenderUpdateSchema(Schema):
     budget = fields.Float(validate=validate.Range(min=0))
     deadline = fields.DateTime()
     status = fields.Str(validate=validate.OneOf(["OPEN", "CLOSED", "AWARDED"]))
+    winning_bid_id = fields.Str(allow_none=True)
 
 
 tender_response_schema = TenderResponseSchema()

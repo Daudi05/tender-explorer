@@ -1,0 +1,52 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background: #111827;
+  color: white;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+/* LINK STYLE */
+.nav-link {
+  color: white;
+  text-decoration: none;
+  font-size: 15px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+
+/* HOVER EFFECT */
+.nav-link:hover {
+  background: #2563eb;
+}
+
+/* ACTIVE LINK */
+.active {
+  background: #1d4ed8;
+}
+
+/* LOGOUT BUTTON */
+.logout {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.logout:hover {
+  background: #ef4444;
+}

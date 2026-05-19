@@ -3,10 +3,12 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from marshmallow import ValidationError
 from app.middleware.role_middleware import role_required
 from app.bids.views.bid_service import BidService
+from app.bids.views.evaluation_service import BidEvaluationService
 from app.bids.views.bid_schema import (
     bid_create_schema, bid_update_schema,
     bid_response_schema, bids_response_schema,
 )
+
 
 bids_bp = Blueprint("bids", __name__, url_prefix="/api/bids")
 
@@ -20,10 +22,12 @@ def submit_bid():
     except ValidationError as err:
         return jsonify({"error": "Validation failed", "details": err.messages}), 422
     try:
-        bid = BidService.submit(data, get_jwt_identity(), request.remote_addr)
+        result = BidService.submit(data, get_jwt_identity(), request.remote_addr)
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
-    return jsonify({"message": "Bid submitted", "bid": bid_response_schema.dump(bid)}), 201
+    bid = result["bid"] if isinstance(result, dict) else result
+    msg = result.get("message", "Bid submitted") if isinstance(result, dict) else "Bid submitted"
+    return jsonify({"message": msg, "bid": bid_response_schema.dump(bid)}), 201
 
 
 @bids_bp.route("/me", methods=["GET"])
@@ -94,3 +98,34 @@ def employer_bids():
             "success": False,
             "error": str(e)
         }), 500
+@bids_bp.route(
+    "/evaluate/<string:tender_id>",
+    methods=["POST"]
+)
+@jwt_required()
+@role_required("EMPLOYER")
+def evaluate_tender(tender_id):
+
+    try:
+
+        winning_bid = (
+            BidEvaluationService.evaluate_tender(
+                tender_id
+            )
+        )
+
+        return jsonify({
+            "message": "Tender awarded successfully",
+            "winning_bid": {
+                "bid_id": winning_bid.id,
+                "contractor_id": winning_bid.contractor_id,
+                "bid_amount": winning_bid.bid_amount,
+                "score": winning_bid.evaluation_score
+            }
+        }), 200
+
+    except ValueError as e:
+
+        return jsonify({
+            "error": str(e)
+        }), 400

@@ -1,1 +1,7 @@
 flask-bcrypt
+flask-migrate
+Flask 
+MySQL 
+SQLAlchemy 
+JWT 
+Marshmallow 
