@@ -1,48 +1,46 @@
-import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import './Navbar.css';
+import { NavLink, useNavigate } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
+import "./Navbar.css"
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
 
   return (
     <nav className="navbar">
-      <Link to="/" className="logo">
-        Tender Explorer
-      </Link>
 
+      {/* LEFT - APP NAME */}
+      <div className="logo" onClick={() => navigate("/")}>
+        Tender Explorer
+      </div>
+
+      {/* NAV LINKS */}
       <div className="nav-links">
 
-        {user?.role === 'EMPLOYER' && (
+        <NavLink to="/" className="nav-link">
+          Home
+        </NavLink>
+
+        {!user && (
           <>
-            <Link to="/employer/dashboard">Dashboard</Link>
-            <Link to="/employer/my-tenders">My Tenders</Link>
-            <Link to="/employer/create-tender">Create Tender</Link>
+            <NavLink to="/login" className="nav-link">
+              Login
+            </NavLink>
+
+            <NavLink to="/register" className="nav-link">
+              Register
+            </NavLink>
           </>
         )}
 
-        {user?.role === 'CONTRACTOR' && (
-          <>
-            <Link to="/contractor/dashboard">Dashboard</Link>
-            <Link to="/contractor/browse">Browse</Link>
-            <Link to="/contractor/my-bids">My Bids</Link>
-          </>
-        )}
-
-      </div>
-
-      <div className="nav-right">
-        {user ? (
-          <button onClick={logout}>
+        {user && (
+          <button className="nav-link logout" onClick={logout}>
             Logout
           </button>
-        ) : (
-          <>
-            <Link to="/login">Login</Link>
-            <Link to="/register">Register</Link>
-          </>
         )}
+
       </div>
+
     </nav>
-  );
+  )
 }

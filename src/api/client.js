@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000/api'
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000'
 
 // Export BASE_URL so download handlers can build URLs without duplicating this string.
 // This was missing before — three components were copy-pasting the fallback URL.

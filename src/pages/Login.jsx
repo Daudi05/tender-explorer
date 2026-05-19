@@ -1,37 +1,49 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import "./stub.css";
+import { useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
+
 
 export default function Login() {
-  const navigate = useNavigate();
+  const { login } = useAuth()
+  const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
     email: "",
-    password: "",
-  });
+    password: ""
+  })
 
   function handleChange(e) {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
-    });
+      [e.target.name]: e.target.value
+    })
   }
 
   async function handleSubmit(e) {
-    e.preventDefault();
+    e.preventDefault()
 
-    console.log(formData);
+    try {
+      const data = await login(formData.email, formData.password)
 
-    navigate("/contractor/dashboard");
+      const role = data.user.role
+
+      if (role === "CONTRACTOR") navigate("/contractor/dashboard")
+      else if (role === "EMPLOYER") navigate("/employer/dashboard")
+      else navigate("/")
+
+    } catch (err) {
+      alert("Login failed")
+    }
   }
 
   return (
-    <div className="auth-page">
+    <div className="auth-container">
       <div className="auth-card">
-        <h1>Login</h1>
+        <h1 className="auth-title">Login</h1>
 
         <form onSubmit={handleSubmit} className="auth-form">
           <input
+            className="auth-input"
             type="email"
             name="email"
             placeholder="Email"
@@ -39,21 +51,25 @@ export default function Login() {
           />
 
           <input
+            className="auth-input"
             type="password"
             name="password"
             placeholder="Password"
             onChange={handleChange}
           />
 
-          <button type="submit">
+          <button className="auth-button" type="submit">
             Login
           </button>
         </form>
 
-        <p>
-          No account? <Link to="/register">Register</Link>
+        <p className="auth-text">
+          No account?{" "}
+          <Link to="/register" className="auth-link">
+            Register
+          </Link>
         </p>
       </div>
     </div>
-  );
+  )
 }

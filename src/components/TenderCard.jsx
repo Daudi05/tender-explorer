@@ -1,22 +1,30 @@
-import { Link } from 'react-router-dom';
-import { formatKES, formatRelativeDate } from '../utils/formatters';
-import './TenderCard.css';
+import { useAuth } from "../context/AuthContext"
+import { useNavigate } from "react-router-dom"
 
 export default function TenderCard({ tender }) {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+
+  const handleClick = () => {
+    if (!user) {
+      navigate("/login")
+      return
+    }
+
+    if (user.role === "CONTRACTOR") {
+      navigate(`/contractor/tenders/${tender.id}`)
+    }
+
+    if (user.role === "EMPLOYER") {
+      navigate(`/employer/tenders/${tender.id}/bids`)
+    }
+  }
+
   return (
-    <Link
-      to={`/contractor/tenders/${tender.id}`}
-      className="tender-card"
-    >
+    <div onClick={handleClick} style={{ cursor: "pointer" }}>
       <h3>{tender.title}</h3>
-
-      <p>{tender.description}</p>
-
-      <h4>{formatKES(tender.budget)}</h4>
-
-      <small>
-        Posted {formatRelativeDate(tender.created_at)}
-      </small>
-    </Link>
-  );
+      <p>{tender.category}</p>
+      <p>{tender.budget}</p>
+    </div>
+  )
 }
