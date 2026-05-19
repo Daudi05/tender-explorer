@@ -1,15 +1,25 @@
 import "../stub.css"
+
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
+
 import { apiFetch } from "../../api/client"
 import { formatKES } from "../../utils/formatters"
 
 export default function TenderDetail() {
+
   const { id } = useParams()
+
   const [tender, setTender] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
+  const [loading, setLoading] = useState(true)
+
   const [message, setMessage] = useState(null)
+
+  const [file, setFile] = useState(null)
+
+  const [documentType, setDocumentType] = useState("")
+
+  const [submitting, setSubmitting] = useState(false)
 
   const [form, setForm] = useState({
     bid_amount: "",
@@ -17,147 +27,316 @@ export default function TenderDetail() {
     completion_months: "",
   })
 
-  useEffect(() => { fetchTender() }, [])
+  // ==================================================
+  // FETCH TENDER
+  // ==================================================
+  useEffect(() => {
+    fetchTender()
+  }, [])
 
   async function fetchTender() {
-    setLoading(true)
+
     try {
-      const data = await apiFetch(`/tenders/${id}`)
+
+      setLoading(true)
+
+      const data = await apiFetch(`/api/tenders/${id}`)
+
       setTender(data.tender)
-    } catch (err) {
-      setMessage({ type: "error", text: err.message || "Failed to load tender" })
+
+    } catch (error) {
+
+      console.error(error)
+
+      setMessage({
+        type: "error",
+        text: "Failed to load tender",
+      })
+
     } finally {
+
       setLoading(false)
     }
   }
 
+  // ==================================================
+  // HANDLE INPUT CHANGES
+  // ==================================================
   function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value })
-    if (message?.type === "error") setMessage(null)
+
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    })
   }
 
+  // ==================================================
+  // SUBMIT BID
+  // ==================================================
   async function submitBid(e) {
+
     e.preventDefault()
-    setSubmitting(true)
-    setMessage(null)
+
     try {
-      await apiFetch("/bids", {
+
+      setSubmitting(true)
+
+      setMessage(null)
+
+      const formData = new FormData()
+
+      // REQUIRED FIELDS
+      formData.append("tender_id", id)
+
+      formData.append(
+        "bid_amount",
+        form.bid_amount
+      )
+
+      formData.append(
+        "proposal_summary",
+        form.proposal_summary
+      )
+
+      formData.append(
+        "completion_months",
+        form.completion_months
+      )
+
+      // OPTIONAL DOCUMENT
+      if (file) {
+
+        formData.append("file", file)
+
+        formData.append(
+          "document_type",
+          documentType || "BID_SUPPORT_DOCUMENT"
+        )
+      }
+
+      // DEBUG
+      for (let pair of formData.entries()) {
+        console.log(pair[0], pair[1])
+      }
+
+      const response = await apiFetch("/api/bids", {
         method: "POST",
-        body: JSON.stringify({
-          tender_id: id,
-          bid_amount: Number(form.bid_amount),
-          proposal_summary: form.proposal_summary?.trim(),
-          completion_months: Number(form.completion_months),
-        }),
+        body: formData,
       })
-      setMessage({ type: "success", text: "Bid submitted successfully! You will be notified of the outcome." })
-      setForm({ bid_amount: "", proposal_summary: "", completion_months: "" })
-    } catch (err) {
-      const detail = err?.details ? JSON.stringify(err.details) : (err?.message || "Bid submission failed")
-      setMessage({ type: "error", text: detail })
+
+      console.log(response)
+
+      setMessage({
+        type: "success",
+        text: "Bid submitted successfully",
+      })
+
+      // RESET FORM
+      setForm({
+        bid_amount: "",
+        proposal_summary: "",
+        completion_months: "",
+      })
+
+      setFile(null)
+
+      setDocumentType("")
+
+    } catch (error) {
+
+      console.error("FULL ERROR:", error)
+
+      const backendMessage =
+        error?.details ||
+        error?.error ||
+        error?.message
+
+      setMessage({
+        type: "error",
+        text:
+          typeof backendMessage === "object"
+            ? JSON.stringify(backendMessage)
+            : backendMessage || "Bid failed",
+      })
+
     } finally {
+
       setSubmitting(false)
     }
   }
 
-  if (loading || !tender) {
-    return <div className="stub-page"><p>Loading tender…</p></div>
+  // ==================================================
+  // LOADING
+  // ==================================================
+  if (loading) {
+
+    return (
+      <div className="dashboard-page">
+        <p>Loading tender...</p>
+      </div>
+    )
   }
 
-  const deadline = new Date(tender.deadline).toLocaleDateString("en-KE", {
-    year: "numeric", month: "long", day: "numeric"
-  })
+  // ==================================================
+  // NO TENDER
+  // ==================================================
+  if (!tender) {
 
+    return (
+      <div className="dashboard-page">
+        <p>Tender not found</p>
+      </div>
+    )
+  }
+
+  // ==================================================
+  // UI
+  // ==================================================
   return (
-    <div style={{ maxWidth: 760, margin: "0 auto" }}>
-      {/* Tender info card */}
-      <div style={{
-        background: "linear-gradient(135deg, #0f0c29, #302b63)",
-        borderRadius: 20,
-        padding: "2rem",
-        marginBottom: "1.5rem",
-        color: "white",
-      }}>
-        <span style={{
-          display: "inline-block",
-          background: "rgba(167,139,250,0.2)",
-          border: "1px solid rgba(167,139,250,0.4)",
-          color: "#c4b5fd",
-          fontSize: "0.75rem",
-          fontWeight: 700,
-          padding: "3px 12px",
-          borderRadius: 9999,
-          marginBottom: "0.875rem",
-          textTransform: "uppercase",
-          letterSpacing: "0.06em",
-        }}>{tender.category}</span>
 
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 800, marginBottom: "0.75rem", letterSpacing: "-0.02em" }}>
-          {tender.title}
-        </h1>
-        <p style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: "1.5rem" }}>
-          {tender.description}
+    <div className="dashboard-page">
+
+      {/* ================================================== */}
+      {/* TENDER DETAILS */}
+      {/* ================================================== */}
+      <div className="dashboard-section">
+
+        <h1>{tender.title}</h1>
+
+        <p>{tender.description}</p>
+
+        <h2>{formatKES(tender.budget)}</h2>
+
+        <p>
+          <strong>Category:</strong> {tender.category}
         </p>
 
-        <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
-          <div>
-            <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", marginBottom: 2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Budget</div>
-            <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#a78bfa" }}>{formatKES(tender.budget)}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", marginBottom: 2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Deadline</div>
-            <div style={{ fontSize: "1rem", fontWeight: 600 }}>{deadline}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", marginBottom: 2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Status</div>
-            <div style={{ fontSize: "1rem", fontWeight: 600, color: tender.status === "OPEN" ? "#6ee7b7" : "#fca5a5" }}>{tender.status}</div>
-          </div>
-        </div>
+        <p>
+          <strong>Deadline:</strong> {tender.deadline}
+        </p>
+
+        <p>
+          <strong>Status:</strong> {tender.status}
+        </p>
+
       </div>
 
-      {/* Bid form */}
+      {/* ================================================== */}
+      {/* BID FORM */}
+      {/* ================================================== */}
       <div className="dashboard-section">
-        <h2>Submit your bid</h2>
 
+        <h2>Submit Bid</h2>
+
+        {/* ================================================== */}
+        {/* MESSAGE */}
+        {/* ================================================== */}
         {message && (
-          <div className={`toast toast-${message.type}`}>
-            {message.type === "success" ? "✓" : "✕"} {message.text}
+
+          <div
+            style={{
+              padding: "12px",
+              marginBottom: "16px",
+              borderRadius: "8px",
+              fontWeight: "600",
+              background:
+                message.type === "success"
+                  ? "#dcfce7"
+                  : "#fee2e2",
+              color:
+                message.type === "success"
+                  ? "#166534"
+                  : "#991b1b",
+              border:
+                message.type === "success"
+                  ? "1px solid #86efac"
+                  : "1px solid #fca5a5",
+            }}
+          >
+            {message.text}
           </div>
         )}
 
-        <form onSubmit={submitBid} className="bid-form" style={{ maxWidth: "100%" }}>
-          <label>Bid amount (KES)</label>
+        <form
+          onSubmit={submitBid}
+          className="bid-form"
+        >
+
           <input
             type="number"
             name="bid_amount"
-            placeholder="e.g. 500000"
+            placeholder="Bid Amount (KES)"
             value={form.bid_amount}
             onChange={handleChange}
             required
           />
 
-          <label>Proposal summary</label>
           <textarea
             name="proposal_summary"
-            placeholder="Describe your approach, experience, and why you're the best fit…"
+            placeholder="Describe your proposal"
             value={form.proposal_summary}
             onChange={handleChange}
+            required
           />
 
-          <label>Estimated completion (months)</label>
           <input
             type="number"
             name="completion_months"
-            placeholder="e.g. 6"
+            placeholder="Estimated Completion (Months)"
             value={form.completion_months}
             onChange={handleChange}
+            required
           />
 
-          <button type="submit" disabled={submitting}>
-            {submitting ? "Submitting…" : "Submit Bid →"}
+          {/* ================================================== */}
+          {/* DOCUMENT TYPE */}
+          {/* ================================================== */}
+          <select
+            value={documentType}
+            onChange={(e) => setDocumentType(e.target.value)}
+          >
+            <option value="">
+              Select Document Type
+            </option>
+
+            <option value="BUSINESS_PERMIT">
+              Business Permit
+            </option>
+
+            <option value="TAX_COMPLIANCE">
+              Tax Compliance
+            </option>
+
+            <option value="NCA_CERTIFICATE">
+              NCA Certificate
+            </option>
+
+            <option value="PORTFOLIO">
+              Portfolio
+            </option>
+          </select>
+
+          {/* ================================================== */}
+          {/* FILE */}
+          {/* ================================================== */}
+          <input
+            type="file"
+            onChange={(e) => setFile(e.target.files[0])}
+          />
+
+          <button
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting
+              ? "Submitting..."
+              : "Submit Bid"}
           </button>
+
         </form>
+
       </div>
+
     </div>
   )
 }
