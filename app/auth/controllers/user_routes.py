@@ -12,18 +12,45 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 @auth_bp.route("/register", methods=["POST"])
 def register():
     try:
+        print("RAW:", request.get_json())
+
         data = register_schema.load(request.get_json() or {})
+
+        print("VALIDATED:", data)
+
+        user, token = AuthService.register(
+            data,
+            request.remote_addr
+        )
+
+        return jsonify({
+            "message": "Registered. Check email to verify.",
+            "user": user_response_schema.dump(user),
+            "verification_token": token,
+        }), 201
+
     except ValidationError as err:
-        return jsonify({"error": "Validation failed", "details": err.messages}), 422
-    try:
-        user, token = AuthService.register(data, request.remote_addr)
+        print("VALIDATION ERROR:", err.messages)
+
+        return jsonify({
+            "error": "Validation failed",
+            "details": err.messages
+        }), 422
+
     except ValueError as e:
-        return jsonify({"error": str(e)}), 400
-    return jsonify({
-        "message": "Registered. Check email to verify.",
-        "user": user_response_schema.dump(user),
-        "verification_token": token,
-    }), 201
+        print("VALUE ERROR:", str(e))
+
+        return jsonify({
+            "error": str(e)
+        }), 400
+
+    except Exception as e:
+        print("SERVER ERROR:", str(e))
+
+        return jsonify({
+            "error": "Internal server error",
+            "details": str(e)
+        }), 500
 
 
 @auth_bp.route("/login", methods=["POST"])
@@ -60,4 +87,20 @@ def me():
     user = AuthService.get_user(get_jwt_identity())
     if not user:
         return jsonify({"error": "User not found"}), 404
+    return jsonify({"user": user_response_schema.dump(user)}), 200
+
+
+@auth_bp.route("/me", methods=["PATCH"])
+@jwt_required()
+def update_me():
+    from app.extensions import db
+    user = AuthService.get_user(get_jwt_identity())
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    data = request.get_json() or {}
+    allowed = {"name", "phone"}
+    for field in allowed:
+        if field in data:
+            setattr(user, field, data[field])
+    db.session.commit()
     return jsonify({"user": user_response_schema.dump(user)}), 200

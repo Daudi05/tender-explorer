@@ -27,7 +27,7 @@ def create_tender():
 
 
 @tenders_bp.route("", methods=["GET"])
-@jwt_required()
+
 def list_tenders():
     args = request.args
     if any(k in args for k in ("search", "category", "min_budget", "max_budget")):

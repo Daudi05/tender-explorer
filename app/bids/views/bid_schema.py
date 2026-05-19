@@ -12,6 +12,8 @@ class BidResponseSchema(Schema):
     submission_ip = fields.Str(allow_none=True)
     fraud_score = fields.Float()
     is_flagged = fields.Bool()
+    is_winner = fields.Bool()
+    evaluation_score = fields.Float()
     created_at = fields.DateTime()
 
 
