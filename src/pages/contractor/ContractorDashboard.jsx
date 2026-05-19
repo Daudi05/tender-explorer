@@ -73,11 +73,11 @@ export default function ContractorDashboard() {
       </div>
 
       <div className="dashboard-section">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", paddingBottom: "0.875rem", borderBottom: "1px solid #f3f0ff" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", paddingBottom: "0.875rem", borderBottom: "1px solid var(--color-border)" }}>
           <h2 style={{ margin: 0, border: 0, padding: 0 }}>Open Tenders</h2>
           <button
             onClick={() => navigate("/contractor/browse")}
-            style={{ padding: "0.45rem 1rem", background: "rgba(124,58,237,0.1)", color: "#7c3aed", border: "1px solid rgba(124,58,237,0.2)", borderRadius: 9999, fontWeight: 600, fontSize: "0.85rem", cursor: "pointer" }}
+            style={{ padding: "0.45rem 1rem", background: "var(--color-primary-subtle)", color: "var(--color-primary)", border: "1px solid var(--color-primary-light)", borderRadius: 9999, fontWeight: 600, fontSize: "0.85rem", cursor: "pointer" }}
           >
             View all →
           </button>

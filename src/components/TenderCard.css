@@ -1,9 +1,9 @@
 .tender-card {
-  background: #ffffff;
-  border: 1px solid #ede9fe;
-  border-radius: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
-  transition: all 250ms ease;
+  transition: box-shadow var(--transition), transform var(--transition);
   position: relative;
   overflow: hidden;
 }
@@ -13,15 +13,15 @@
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 3px;
-  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  background: var(--color-primary);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 300ms ease;
 }
 
 .tender-card:hover {
-  border-color: #c4b5fd;
-  box-shadow: 0 8px 32px rgba(124, 58, 237, 0.12);
+  border-color: var(--color-primary-light);
+  box-shadow: var(--shadow-md);
   transform: translateY(-4px);
 }
 
@@ -30,13 +30,13 @@
 .tender-card h3 {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #0f0a1e;
+  color: var(--color-text);
   margin-bottom: 0.5rem;
   line-height: 1.3;
 }
 
 .tender-card p {
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
   line-height: 1.6;
 }

@@ -64,7 +64,7 @@ export default function MyBids() {
             <tbody>
               {bids.map((bid) => (
                 <tr key={bid.id}>
-                  <td style={{ fontWeight: 600, color: "#7c3aed", fontSize: "0.85rem" }}>
+                  <td style={{ fontWeight: 600, color: "var(--color-primary)", fontSize: "0.85rem" }}>
                     {bid.tender_id?.slice(0, 8) || "—"}
                   </td>
                   <td style={{ fontWeight: 700 }}>
@@ -73,7 +73,7 @@ export default function MyBids() {
                   <td>{bid.completion_months ? `${bid.completion_months} mo` : "—"}</td>
                   <td>
                     {bid.evaluation_score != null
-                      ? <span style={{ fontWeight: 700, color: "#7c3aed" }}>{Number(bid.evaluation_score).toFixed(1)}</span>
+                      ? <span style={{ fontWeight: 700, color: "var(--color-primary)" }}>{Number(bid.evaluation_score).toFixed(1)}</span>
                       : <span style={{ color: "#9ca3af" }}>pending</span>
                     }
                   </td>

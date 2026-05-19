@@ -39,11 +39,11 @@ export default function BrowseTenders() {
           onChange={(e) => setSearch(e.target.value)}
           style={{
             width: '100%', maxWidth: 480, padding: '0.75rem 1rem',
-            border: '1.5px solid #e5e7eb', borderRadius: 12, fontSize: '0.95rem',
+            border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius)', fontSize: '0.95rem',
             background: '#fff', outline: 'none', transition: '0.2s',
           }}
-          onFocus={(e) => { e.target.style.borderColor = '#7c3aed'; e.target.style.boxShadow = '0 0 0 4px rgba(124,58,237,0.12)' }}
-          onBlur={(e) => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none' }}
+          onFocus={(e) => { e.target.style.borderColor = 'var(--color-primary)'; e.target.style.boxShadow = '0 0 0 3px rgba(21,128,61,0.12)' }}
+          onBlur={(e) => { e.target.style.borderColor = 'var(--color-border)'; e.target.style.boxShadow = 'none' }}
         />
       </div>
 

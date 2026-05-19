@@ -49,7 +49,7 @@ export default function TenderBids() {
   return (
     <div style={{ maxWidth: 960, margin: "0 auto" }}>
       {/* Tender header */}
-      <div style={{ background: "linear-gradient(135deg,#0f0c29,#302b63)", borderRadius: 16, padding: "1.75rem 2rem", marginBottom: "1.5rem", color: "white" }}>
+      <div style={{ background: "var(--color-primary-active)", borderRadius: 16, padding: "1.75rem 2rem", marginBottom: "1.5rem", color: "white" }}>
         <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "0.07em" }}>
           {tender?.category}
         </div>
@@ -57,7 +57,7 @@ export default function TenderBids() {
         <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap", marginTop: "1rem" }}>
           <div>
             <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Budget</div>
-            <div style={{ fontWeight: 700, color: "#a78bfa" }}>KES {Number(tender?.budget).toLocaleString()}</div>
+            <div style={{ fontWeight: 700, color: "#86efac" }}>KES {Number(tender?.budget).toLocaleString()}</div>
           </div>
           <div>
             <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Status</div>
@@ -88,12 +88,12 @@ export default function TenderBids() {
 
       {/* Bids table */}
       <div className="dashboard-section">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", paddingBottom: "0.875rem", borderBottom: "1px solid #f3f0ff" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", paddingBottom: "0.875rem", borderBottom: "1px solid var(--color-border)" }}>
           <h2 style={{ margin: 0, padding: 0, border: 0 }}>All Bids ({bids.length})</h2>
           {tender?.status === "OPEN" && (
             <button
               onClick={() => navigate(`/employer/award/${id}`)}
-              style={{ padding: "0.55rem 1.25rem", background: "linear-gradient(135deg,#7c3aed,#2563eb)", color: "white", border: "none", borderRadius: 10, fontWeight: 600, cursor: "pointer", fontSize: "0.875rem", boxShadow: "0 4px 12px rgba(124,58,237,0.3)" }}
+              style={{ padding: "0.55rem 1.25rem", background: "var(--color-primary)", color: "white", border: "none", borderRadius: 10, fontWeight: 600, cursor: "pointer", fontSize: "0.875rem" }}
             >
               Award Tender →
             </button>
