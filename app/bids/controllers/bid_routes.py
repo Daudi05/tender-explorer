@@ -10,8 +10,8 @@ from app.bids.views.bid_schema import (
     bid_response_schema, bids_response_schema,
 )
 
-# Errors raised for unverified account/docs return 403, not 400
-VERIFICATION_ERRORS = {"Account not verified", "No verified documents"}
+# Contractors without admin-verified documents get 403, not 400
+VERIFICATION_ERRORS = {"No verified documents"}
 
 bids_bp = Blueprint("bids", __name__, url_prefix="/api/bids")
 

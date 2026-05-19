@@ -51,9 +51,6 @@ class BidService:
         if contractor.role != "CONTRACTOR":
             raise ValueError("Only contractors can submit bids")
 
-        if not contractor.is_verified:
-            raise ValueError("Account not verified")
-
         # Require at least one admin-verified document before bidding
         verified_docs = Document.query.filter_by(
             uploader_id=contractor_id,

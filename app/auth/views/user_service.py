@@ -21,7 +21,7 @@ class AuthService:
             "name": data["name"].strip(),
             "phone": data.get("phone"),
             "role": data["role"],
-            "is_verified": False,
+            "is_verified": True,
             "verification_token": token,
             "last_login_ip": request_ip,
         })
