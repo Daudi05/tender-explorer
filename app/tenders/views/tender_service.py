@@ -1,5 +1,6 @@
 from datetime import datetime
 from app.tenders.models.tender_repo import TenderRepository
+from app.extensions import db
 
 
 class TenderService:
@@ -29,10 +30,22 @@ class TenderService:
 
     @staticmethod
     def update(tender, data, requester_id):
+        from app.bids.models.bid import Bid
         if tender.employer_id != requester_id:
             raise PermissionError("Only the owner can update this tender")
+        winning_bid_id = data.pop("winning_bid_id", None)
         for k, v in data.items():
             setattr(tender, k, v)
+        if winning_bid_id:
+            tender.winning_bid_id = winning_bid_id
+            tender.status = "AWARDED"
+            tender.awarded_at = datetime.utcnow()
+            bids = Bid.query.filter_by(tender_id=tender.id).all()
+            for b in bids:
+                b.status = "AWARDED" if b.id == winning_bid_id else "REJECTED"
+                if b.id == winning_bid_id:
+                    b.is_winner = True
+            db.session.commit()
         return TenderRepository.update(tender)
 
     @staticmethod

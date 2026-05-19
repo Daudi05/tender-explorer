@@ -88,3 +88,19 @@ def me():
     if not user:
         return jsonify({"error": "User not found"}), 404
     return jsonify({"user": user_response_schema.dump(user)}), 200
+
+
+@auth_bp.route("/me", methods=["PATCH"])
+@jwt_required()
+def update_me():
+    from app.extensions import db
+    user = AuthService.get_user(get_jwt_identity())
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    data = request.get_json() or {}
+    allowed = {"name", "phone"}
+    for field in allowed:
+        if field in data:
+            setattr(user, field, data[field])
+    db.session.commit()
+    return jsonify({"user": user_response_schema.dump(user)}), 200

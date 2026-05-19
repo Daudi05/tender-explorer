@@ -80,7 +80,7 @@ export default function AwardTender() {
         apiFetch(`/tenders/${tenderId}`),
         apiFetch(`/bids/tender/${tenderId}`),
       ])
-      setTender(tenderData)
+      setTender(tenderData.tender || tenderData)
       // Backend returns { bids: [...] } or just [...]
       setBids(Array.isArray(bidsData) ? bidsData : bidsData.bids ?? [])
     } catch (err) {
@@ -230,10 +230,10 @@ export default function AwardTender() {
                     </td>
                     <td className="award-bid-proposal">
                       {/* Truncate proposal to 100 chars — full text visible on Allan's TenderBids page */}
-                      {bid.proposal_text
-                        ? bid.proposal_text.length > 100
-                          ? bid.proposal_text.slice(0, 100) + '…'
-                          : bid.proposal_text
+                      {bid.proposal_summary
+                        ? bid.proposal_summary.length > 100
+                          ? bid.proposal_summary.slice(0, 100) + '…'
+                          : bid.proposal_summary
                         : <span className="award-bid-no-proposal">No proposal</span>
                       }
                     </td>
