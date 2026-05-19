@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from marshmallow import ValidationError
 from app.middleware.role_middleware import role_required
 from app.bids.views.bid_service import BidService
+from app.documents.views.document_service import DocumentService
 from app.bids.views.evaluation_service import BidEvaluationService
 from app.bids.views.bid_schema import (
     bid_create_schema, bid_update_schema,
@@ -17,18 +18,66 @@ bids_bp = Blueprint("bids", __name__, url_prefix="/api/bids")
 @jwt_required()
 @role_required("CONTRACTOR")
 def submit_bid():
-    try:
-        data = bid_create_schema.load(request.get_json() or {})
-    except ValidationError as err:
-        return jsonify({"error": "Validation failed", "details": err.messages}), 422
-    try:
-        result = BidService.submit(data, get_jwt_identity(), request.remote_addr)
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
-    bid = result["bid"] if isinstance(result, dict) else result
-    msg = result.get("message", "Bid submitted") if isinstance(result, dict) else "Bid submitted"
-    return jsonify({"message": msg, "bid": bid_response_schema.dump(bid)}), 201
 
+    try:
+
+        # =========================
+        # READ FORM DATA
+        # =========================
+        data = {
+            "tender_id": request.form.get("tender_id"),
+            "bid_amount": request.form.get("bid_amount"),
+            "proposal_summary": request.form.get("proposal_summary"),
+            "completion_months": request.form.get("completion_months"),
+        }
+
+        data = bid_create_schema.load(data)
+
+    except ValidationError as err:
+
+        return jsonify({
+            "error": "Validation failed",
+            "details": err.messages
+        }), 422
+
+    try:
+
+        bid = BidService.submit(
+            data,
+            get_jwt_identity(),
+            request.remote_addr
+        )
+
+        # =========================
+        # HANDLE FILES
+        # =========================
+        uploaded_files = request.files.getlist("file")
+
+        for uploaded_file in uploaded_files:
+
+            if uploaded_file.filename == "":
+                continue
+
+            document_data = {
+                "document_type": "BID_SUPPORT_DOCUMENT"
+            }
+
+            DocumentService.upload(
+                uploaded_file,
+                document_data,
+                get_jwt_identity()
+            )
+
+    except ValueError as e:
+
+        return jsonify({
+            "error": str(e)
+        }), 400
+
+    return jsonify({
+        "message": "Bid submitted successfully",
+        "bid": bid_response_schema.dump(bid)
+    }), 201
 
 @bids_bp.route("/me", methods=["GET"])
 @jwt_required()
