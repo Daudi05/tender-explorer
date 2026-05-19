@@ -1,55 +1,51 @@
+from datetime import datetime
 from app.extensions import db
-
 from app.tenders.models.tender import Tender
 
 
 class TenderRepository:
-
     @staticmethod
-    def create_tender(data):
-
-        tender = Tender(**data)
-
-        db.session.add(tender)
-
+    def create(data):
+        t = Tender(**data)
+        db.session.add(t)
         db.session.commit()
-
-        return tender
+        return t
 
     @staticmethod
-    def get_all_tenders(page, per_page, category=None):
+    def get_by_id(tender_id):
+        return db.session.get(Tender, tender_id)
 
-        query = Tender.query.filter_by(is_deleted=False)
+    @staticmethod
+    def list_all():
+        return Tender.query.order_by(Tender.created_at.desc()).all()
 
+    @staticmethod
+    def list_active():
+        return Tender.query.filter(Tender.deadline > datetime.utcnow()).order_by(Tender.deadline.asc()).all()
+
+    @staticmethod
+    def list_by_employer(employer_id):
+        return Tender.query.filter_by(employer_id=employer_id).order_by(Tender.created_at.desc()).all()
+
+    @staticmethod
+    def search(keyword=None, category=None, min_budget=None, max_budget=None):
+        q = Tender.query
+        if keyword:
+            q = q.filter(Tender.title.ilike(f"%{keyword}%"))
         if category:
-            query = query.filter(
-                Tender.category.ilike(f'%{category}%')
-            )
-
-        return query.paginate(
-            page=page,
-            per_page=per_page,
-            error_out=False
-        )
+            q = q.filter(Tender.category == category)
+        if min_budget is not None:
+            q = q.filter(Tender.budget >= min_budget)
+        if max_budget is not None:
+            q = q.filter(Tender.budget <= max_budget)
+        return q.order_by(Tender.created_at.desc()).all()
 
     @staticmethod
-    def get_tender_by_uuid(uuid):
-
-        return Tender.query.filter_by(
-            uuid=uuid,
-            is_deleted=False
-        ).first()
-
-    @staticmethod
-    def update_tender(tender):
-
+    def update(tender):
         db.session.commit()
-
         return tender
 
     @staticmethod
-    def delete_tender(tender):
-
-        tender.is_deleted = True
-
+    def delete(tender):
+        db.session.delete(tender)
         db.session.commit()

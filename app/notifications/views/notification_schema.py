@@ -7,6 +7,7 @@ class NotificationResponseSchema(Schema):
     message = fields.Str()
     link = fields.Str(allow_none=True)
     is_read = fields.Bool()
+    type = fields.Str()
     created_at = fields.DateTime()
 
 

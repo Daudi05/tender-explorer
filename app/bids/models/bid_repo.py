@@ -1,20 +1,36 @@
-# this is the function that saves the bid to the database
-
 from app.extensions import db
 from app.bids.models.bid import Bid
 
 
-def create_bid(data):
+class BidRepository:
+    @staticmethod
+    def create(data):
+        b = Bid(**data)
+        db.session.add(b)
+        db.session.commit()
+        return b
 
-    bid = Bid(
-        contractor_id=data["contractor_id"],
-        tender_id=data["tender_id"],
-        amount=data["amount"],
-        proposal=data["proposal"]
-    )
+    @staticmethod
+    def get_by_id(bid_id):
+        return db.session.get(Bid, bid_id)
 
-    db.session.add(bid)
+    @staticmethod
+    def list_by_contractor(contractor_id):
+        return Bid.query.filter_by(contractor_id=contractor_id).order_by(Bid.created_at.desc()).all()
 
-    db.session.commit()
+    @staticmethod
+    def list_by_tender(tender_id):
+        return Bid.query.filter_by(tender_id=tender_id).order_by(Bid.bid_amount.asc()).all()
 
-    return bid
+    @staticmethod
+    def list_flagged():
+        return Bid.query.filter_by(is_flagged=True).order_by(Bid.fraud_score.desc()).all()
+
+    @staticmethod
+    def existing(tender_id, contractor_id):
+        return Bid.query.filter_by(tender_id=tender_id, contractor_id=contractor_id).first()
+
+    @staticmethod
+    def update(bid):
+        db.session.commit()
+        return bid

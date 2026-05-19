@@ -1,20 +1,32 @@
 from app.extensions import db
 from app.auth.models.user import User
 
-def get_user_by_email(email):
-    return User.query.filter_by(email=email.lower().strip()).first()
 
-def get_user_by_id(user_id):
-    return User.query.get(user_id)
+class UserRepository:
+    @staticmethod
+    def create(data):
+        user = User(**data)
+        db.session.add(user)
+        db.session.commit()
+        return user
 
-def create_user(first_name, last_name, email, password, role="contractor"):
-    user = User(
-        first_name=first_name.strip(),
-        last_name=last_name.strip(),
-        email=email.lower().strip(),
-        role=role
-    )
-    user.set_password(password)
-    db.session.add(user)
-    db.session.commit()
-    return user
+    @staticmethod
+    def get_by_id(user_id):
+        return db.session.get(User, user_id)
+
+    @staticmethod
+    def get_by_email(email):
+        return User.query.filter_by(email=email.lower().strip()).first()
+
+    @staticmethod
+    def get_by_token(token):
+        return User.query.filter_by(verification_token=token).first()
+
+    @staticmethod
+    def list_admins():
+        return User.query.filter_by(role="ADMIN").all()
+
+    @staticmethod
+    def update(user):
+        db.session.commit()
+        return user

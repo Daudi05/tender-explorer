@@ -1,126 +1,106 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import (
-    jwt_required,
-    get_jwt_identity,
-    create_access_token
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from marshmallow import ValidationError
+from app.auth.views.user_service import AuthService
+from app.auth.views.user_schema import (
+    register_schema, login_schema, user_response_schema,
 )
 
-from ..models.user_repo import (
-    get_user_by_email,
-    get_user_by_id,
-    create_user
-)
-
-from ..utils.auth_validators import (
-    validate_register_data,
-    validate_login_data
-)
-
-user_bp = Blueprint("user_bp", __name__)
+auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 
-
-@user_bp.route("/register", methods=["POST"])
+@auth_bp.route("/register", methods=["POST"])
 def register():
+    try:
+        print("RAW:", request.get_json())
 
-    data = request.get_json() or {}
+        data = register_schema.load(request.get_json() or {})
 
-    errors = validate_register_data(data)
+        print("VALIDATED:", data)
 
-    if errors:
+        user, token = AuthService.register(
+            data,
+            request.remote_addr
+        )
+
         return jsonify({
-            "success": False,
-            "message": "Validation failed",
-            "errors": errors
+            "message": "Registered. Check email to verify.",
+            "user": user_response_schema.dump(user),
+            "verification_token": token,
+        }), 201
+
+    except ValidationError as err:
+        print("VALIDATION ERROR:", err.messages)
+
+        return jsonify({
+            "error": "Validation failed",
+            "details": err.messages
+        }), 422
+
+    except ValueError as e:
+        print("VALUE ERROR:", str(e))
+
+        return jsonify({
+            "error": str(e)
         }), 400
 
-   
-    existing_user = get_user_by_email(data["email"])
+    except Exception as e:
+        print("SERVER ERROR:", str(e))
 
-    if existing_user:
         return jsonify({
-            "success": False,
-            "message": "Email already exists"
-        }), 409
-
-   
-    user = create_user(
-        first_name=data["first_name"],
-        last_name=data["last_name"],
-        email=data["email"],
-        password=data["password"],
-        role=data.get("role", "contractor")
-    )
-
-   
-    return jsonify({
-        "success": True,
-        "message": "User registered successfully",
-        "data": {
-            "user": user.to_dict()
-        }
-    }), 201
+            "error": "Internal server error",
+            "details": str(e)
+        }), 500
 
 
-@user_bp.route("/login", methods=["POST"])
+@auth_bp.route("/login", methods=["POST"])
 def login():
-
-    data = request.get_json() or {}
-
-    errors = validate_login_data(data)
-
-    if errors:
-        return jsonify({
-            "success": False,
-            "message": "Validation failed",
-            "errors": errors
-        }), 400
-
-    user = get_user_by_email(data["email"])
-
-   
-    if not user or not user.check_password(data["password"]):
-        return jsonify({
-            "success": False,
-            "message": "Invalid email or password"
-        }), 401
-
-   
-    access_token = create_access_token(
-        identity=str(user.id),
-        additional_claims={
-            "role": user.role
-        }
-    )
-
+    try:
+        data = login_schema.load(request.get_json() or {})
+    except ValidationError as err:
+        return jsonify({"error": "Validation failed", "details": err.messages}), 422
+    try:
+        user, token = AuthService.login(data, request.remote_addr)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 401
     return jsonify({
-        "success": True,
         "message": "Login successful",
-        "data": {
-            "user": user.to_dict(),
-            "access_token": access_token
-        }
+        "access_token": token,
+        "user": user_response_schema.dump(user),
     }), 200
 
 
-@user_bp.route("/me", methods=["GET"])
+@auth_bp.route("/verify-email", methods=["POST"])
+def verify_email():
+    token = (request.get_json() or {}).get("token")
+    if not token:
+        return jsonify({"error": "token required"}), 400
+    user = AuthService.verify_email(token)
+    if not user:
+        return jsonify({"error": "Invalid token"}), 400
+    return jsonify({"message": "Email verified", "user": user_response_schema.dump(user)}), 200
+
+
+@auth_bp.route("/me", methods=["GET"])
 @jwt_required()
 def me():
-
-  
-    user_id = get_jwt_identity()
-
-  
-    user = get_user_by_id(user_id)
-
+    user = AuthService.get_user(get_jwt_identity())
     if not user:
-        return jsonify({
-            "success": False,
-            "message": "User not found"
-        }), 404
+        return jsonify({"error": "User not found"}), 404
+    return jsonify({"user": user_response_schema.dump(user)}), 200
 
-    return jsonify({
-        "success": True,
-        "message": "Profile fetched successfully",
-        "data": user.to_dict()
-    }), 200
+
+@auth_bp.route("/me", methods=["PATCH"])
+@jwt_required()
+def update_me():
+    from app.extensions import db
+    user = AuthService.get_user(get_jwt_identity())
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    data = request.get_json() or {}
+    allowed = {"name", "phone"}
+    for field in allowed:
+        if field in data:
+            setattr(user, field, data[field])
+    db.session.commit()
+    return jsonify({"user": user_response_schema.dump(user)}), 200
