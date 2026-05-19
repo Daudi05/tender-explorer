@@ -68,6 +68,7 @@ export default function Register() {
         <h1>Create Account</h1>
 
         <form onSubmit={handleSubmit} className="auth-form">
+
           <input
             type="text"
             name="name"
@@ -86,7 +87,6 @@ export default function Register() {
             required
           />
 
-         
           <input
             type="tel"
             name="phone"
@@ -105,6 +105,7 @@ export default function Register() {
             required
           />
 
+          {/* ✅ UPDATED ROLE SELECT */}
           <select
             name="role"
             value={form.role}
@@ -112,6 +113,7 @@ export default function Register() {
           >
             <option value="CONTRACTOR">CONTRACTOR</option>
             <option value="EMPLOYER">EMPLOYER</option>
+            <option value="ADMIN">ADMIN</option>
           </select>
 
           <button type="submit" disabled={loading}>
