@@ -7,22 +7,19 @@
   align-items: center;
   padding: 0 2rem;
   height: 68px;
-  background: rgba(15, 12, 41, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
 }
 
 .logo {
   font-size: 1.25rem;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
-  background: linear-gradient(135deg, #a78bfa, #60a5fa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--color-primary);
   letter-spacing: -0.02em;
   user-select: none;
+  font-family: var(--font-family-display);
 }
 
 .logo::before {
@@ -36,60 +33,56 @@
 }
 
 .nav-link {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-muted);
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
   padding: 0.45rem 1rem;
-  border-radius: 9999px;
-  transition: all 200ms ease;
+  border-radius: var(--radius-full);
+  transition: all var(--transition);
   border: 1px solid transparent;
 }
 
 .nav-link:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--color-text);
+  background: var(--color-surface-hover);
 }
 
 .nav-link.active {
-  color: #ffffff;
-  background: rgba(124, 58, 237, 0.3);
-  border-color: rgba(124, 58, 237, 0.5);
+  color: var(--color-primary);
+  background: var(--color-primary-subtle);
+  border-color: var(--color-primary-light);
 }
 
 .logout {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-muted);
   font-size: 0.9rem;
   font-weight: 500;
   padding: 0.45rem 1rem;
-  border-radius: 9999px;
-  transition: all 200ms ease;
+  border-radius: var(--radius-full);
+  transition: all var(--transition);
   border: 1px solid transparent;
   cursor: pointer;
   background: none;
 }
 
 .logout:hover {
-  color: #fca5a5;
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-light);
 }
 
-/* Register/Login CTA buttons in navbar */
 .nav-cta {
-  background: linear-gradient(135deg, #7c3aed, #2563eb) !important;
+  background: var(--color-primary) !important;
   color: white !important;
   padding: 0.45rem 1.25rem !important;
-  border-radius: 9999px !important;
+  border-radius: var(--radius-full) !important;
   font-weight: 600 !important;
   border: none !important;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
-  transition: all 200ms ease !important;
+  transition: background var(--transition) !important;
 }
 
 .nav-cta:hover {
-  transform: translateY(-1px) !important;
-  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.45) !important;
-  background: linear-gradient(135deg, #6d28d9, #1d4ed8) !important;
+  background: var(--color-primary-hover) !important;
+  color: white !important;
 }
