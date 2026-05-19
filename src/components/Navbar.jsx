@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
+import NotificationBell from "./NotificationBell"
 import "./Navbar.css"
 
 export default function Navbar() {
@@ -29,9 +30,12 @@ export default function Navbar() {
         )}
 
         {user && (
-          <button className="logout" onClick={logout}>
-            Log out
-          </button>
+          <>
+            <NotificationBell />
+            <button className="logout" onClick={logout}>
+              Log out
+            </button>
+          </>
         )}
       </div>
     </nav>

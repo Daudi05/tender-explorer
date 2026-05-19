@@ -41,7 +41,7 @@ export function useNotifications() {
     try {
       const data = await apiFetch('/notifications/unread-count');
       if (!mountedRef.current) return;
-      setUnreadCount(data.count || 0);
+      setUnreadCount(data.unread_count || 0);
     } catch (err) {}
   }, [isAuthenticated]);
 

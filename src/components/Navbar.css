@@ -51,6 +51,15 @@
   border-color: rgba(255, 255, 255, 0.15);
 }
 
+.layout:has(.home-page) .notification-bell-button {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.layout:has(.home-page) .notification-bell-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
 .logo {
   font-size: 1.25rem;
   font-weight: 700;
