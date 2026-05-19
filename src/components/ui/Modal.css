@@ -29,3 +29,10 @@
 }
 .ui-modal-close:hover { color: var(--color-text); background: var(--color-surface-hover); }
 .ui-modal-body { padding: var(--space-6); }
+.ui-modal-footer {
+  display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2);
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--color-border);
+  background: #f9fafb;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
