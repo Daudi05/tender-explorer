@@ -8,39 +8,32 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-
-      {/* LEFT - APP NAME */}
       <div className="logo" onClick={() => navigate("/")}>
-        Tender Explorer
+        TenderExplorer
       </div>
 
-      {/* NAV LINKS */}
       <div className="nav-links">
-
-        <NavLink to="/" className="nav-link">
+        <NavLink to="/" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
           Home
         </NavLink>
 
         {!user && (
           <>
-            <NavLink to="/login" className="nav-link">
-              Login
+            <NavLink to="/login" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
+              Log in
             </NavLink>
-
-            <NavLink to="/register" className="nav-link">
-              Register
+            <NavLink to="/register" className="nav-link nav-cta">
+              Get started
             </NavLink>
           </>
         )}
 
         {user && (
-          <button className="nav-link logout" onClick={logout}>
-            Logout
+          <button className="logout" onClick={logout}>
+            Log out
           </button>
         )}
-
       </div>
-
     </nav>
   )
 }
