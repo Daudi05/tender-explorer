@@ -24,7 +24,7 @@ export default function CreateTender() {
     setError(null)
     setLoading(true)
     try {
-      await apiFetch('/api/tenders', {
+      await apiFetch('/tenders', {
         method: 'POST',
         body: JSON.stringify({
           title: form.title,
@@ -49,7 +49,7 @@ export default function CreateTender() {
         <p>Fill in the details below to publish a new tender</p>
       </div>
 
-      {error && <p style={{ color: 'red', marginBottom: '1rem' }}>{error}</p>}
+      {error && <div className="toast toast-error" style={{ marginBottom: '1rem' }}>✕ {error}</div>}
 
       <form className="create-tender-form" onSubmit={handleSubmit}>
         <label>Title</label>
@@ -105,7 +105,7 @@ export default function CreateTender() {
         </div>
 
         <button type="submit" disabled={loading}>
-          {loading ? 'Creating...' : 'Create Tender'}
+          {loading ? 'Publishing…' : 'Publish Tender →'}
         </button>
       </form>
     </div>
