@@ -1,24 +1,18 @@
 import "../stub.css"
-
 import { useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
-
+import { useParams, Link } from "react-router-dom"
 import { apiFetch } from "../../api/client"
 import { formatKES } from "../../utils/formatters"
 
 export default function TenderDetail() {
-
   const { id } = useParams()
 
   const [tender, setTender] = useState(null)
   const [loading, setLoading] = useState(true)
-
   const [message, setMessage] = useState(null)
-
+  const [blockReason, setBlockReason] = useState(null) // 'unverified' | 'no-docs' | null
   const [file, setFile] = useState(null)
-
   const [documentType, setDocumentType] = useState("")
-
   const [submitting, setSubmitting] = useState(false)
 
   const [form, setForm] = useState({
@@ -27,316 +21,217 @@ export default function TenderDetail() {
     completion_months: "",
   })
 
-  // ==================================================
-  // FETCH TENDER
-  // ==================================================
-  useEffect(() => {
-    fetchTender()
-  }, [])
+  useEffect(() => { fetchTender() }, [])
 
   async function fetchTender() {
-
     try {
-
       setLoading(true)
-
-      const data = await apiFetch(`/api/tenders/${id}`)
-
+      // apiFetch auto-prepends /api — use path without /api prefix
+      const data = await apiFetch(`/tenders/${id}`)
       setTender(data.tender)
-
     } catch (error) {
-
       console.error(error)
-
-      setMessage({
-        type: "error",
-        text: "Failed to load tender",
-      })
-
+      setMessage({ type: "error", text: "Failed to load tender" })
     } finally {
-
       setLoading(false)
     }
   }
 
-  // ==================================================
-  // HANDLE INPUT CHANGES
-  // ==================================================
   function handleChange(e) {
-
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    })
+    setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  // ==================================================
-  // SUBMIT BID
-  // ==================================================
   async function submitBid(e) {
-
     e.preventDefault()
+    setSubmitting(true)
+    setMessage(null)
+    setBlockReason(null)
 
     try {
-
-      setSubmitting(true)
-
-      setMessage(null)
-
       const formData = new FormData()
-
-      // REQUIRED FIELDS
       formData.append("tender_id", id)
+      formData.append("bid_amount", form.bid_amount)
+      formData.append("proposal_summary", form.proposal_summary)
+      formData.append("completion_months", form.completion_months)
 
-      formData.append(
-        "bid_amount",
-        form.bid_amount
-      )
-
-      formData.append(
-        "proposal_summary",
-        form.proposal_summary
-      )
-
-      formData.append(
-        "completion_months",
-        form.completion_months
-      )
-
-      // OPTIONAL DOCUMENT
       if (file) {
-
         formData.append("file", file)
-
-        formData.append(
-          "document_type",
-          documentType || "BID_SUPPORT_DOCUMENT"
-        )
+        formData.append("document_type", documentType || "BID_SUPPORT_DOCUMENT")
       }
 
-      // DEBUG
-      for (let pair of formData.entries()) {
-        console.log(pair[0], pair[1])
-      }
+      // apiFetch auto-prepends /api — use path without /api prefix
+      await apiFetch("/bids", { method: "POST", body: formData })
 
-      const response = await apiFetch("/api/bids", {
-        method: "POST",
-        body: formData,
-      })
-
-      console.log(response)
-
-      setMessage({
-        type: "success",
-        text: "Bid submitted successfully",
-      })
-
-      // RESET FORM
-      setForm({
-        bid_amount: "",
-        proposal_summary: "",
-        completion_months: "",
-      })
-
+      setMessage({ type: "success", text: "Bid submitted successfully! You will be notified of the outcome." })
+      setForm({ bid_amount: "", proposal_summary: "", completion_months: "" })
       setFile(null)
-
       setDocumentType("")
 
     } catch (error) {
+      console.error("Bid error:", error)
 
-      console.error("FULL ERROR:", error)
+      // 403 means account not verified OR no verified documents
+      if (error.status === 403) {
+        const msg = (error.message || "").toLowerCase()
+        if (msg.includes("not verified") || msg.includes("account")) {
+          setBlockReason("unverified")
+        } else {
+          setBlockReason("no-docs")
+        }
+        return
+      }
 
-      const backendMessage =
-        error?.details ||
-        error?.error ||
-        error?.message
-
+      const backendMessage = error?.message || "Bid submission failed"
       setMessage({
         type: "error",
-        text:
-          typeof backendMessage === "object"
-            ? JSON.stringify(backendMessage)
-            : backendMessage || "Bid failed",
+        text: typeof backendMessage === "object" ? JSON.stringify(backendMessage) : backendMessage,
       })
-
     } finally {
-
       setSubmitting(false)
     }
   }
 
-  // ==================================================
-  // LOADING
-  // ==================================================
   if (loading) {
-
-    return (
-      <div className="dashboard-page">
-        <p>Loading tender...</p>
-      </div>
-    )
+    return <div className="stub-page"><p>Loading tender…</p></div>
   }
 
-  // ==================================================
-  // NO TENDER
-  // ==================================================
   if (!tender) {
-
-    return (
-      <div className="dashboard-page">
-        <p>Tender not found</p>
-      </div>
-    )
+    return <div className="stub-page"><p>Tender not found</p></div>
   }
 
-  // ==================================================
-  // UI
-  // ==================================================
+  const deadline = new Date(tender.deadline).toLocaleDateString("en-KE", {
+    year: "numeric", month: "long", day: "numeric",
+  })
+
   return (
+    <div style={{ maxWidth: 760, margin: "0 auto" }}>
+      {/* Tender info card */}
+      <div style={{
+        background: "var(--color-primary-active)",
+        borderRadius: "var(--radius-xl)",
+        padding: "2rem",
+        marginBottom: "1.5rem",
+        color: "white",
+      }}>
+        <span style={{
+          display: "inline-block",
+          background: "rgba(255,255,255,0.15)",
+          border: "1px solid rgba(255,255,255,0.3)",
+          color: "rgba(255,255,255,0.9)",
+          fontSize: "0.75rem",
+          fontWeight: 700,
+          padding: "3px 12px",
+          borderRadius: 9999,
+          marginBottom: "0.875rem",
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+        }}>{tender.category}</span>
 
-    <div className="dashboard-page">
-
-      {/* ================================================== */}
-      {/* TENDER DETAILS */}
-      {/* ================================================== */}
-      <div className="dashboard-section">
-
-        <h1>{tender.title}</h1>
-
-        <p>{tender.description}</p>
-
-        <h2>{formatKES(tender.budget)}</h2>
-
-        <p>
-          <strong>Category:</strong> {tender.category}
+        <h1 style={{ fontSize: "1.75rem", fontWeight: 700, marginBottom: "0.75rem", letterSpacing: "-0.02em" }}>
+          {tender.title}
+        </h1>
+        <p style={{ color: "rgba(255,255,255,0.78)", lineHeight: 1.7, marginBottom: "1.5rem" }}>
+          {tender.description}
         </p>
 
-        <p>
-          <strong>Deadline:</strong> {tender.deadline}
-        </p>
-
-        <p>
-          <strong>Status:</strong> {tender.status}
-        </p>
-
+        <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", marginBottom: 2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Budget</div>
+            <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "rgba(255,255,255,0.95)" }}>{formatKES(tender.budget)}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", marginBottom: 2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Deadline</div>
+            <div style={{ fontSize: "1rem", fontWeight: 600 }}>{deadline}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", marginBottom: 2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Status</div>
+            <div style={{ fontSize: "1rem", fontWeight: 700, color: tender.status === "OPEN" ? "#86efac" : "#fca5a5" }}>
+              {tender.status}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* ================================================== */}
-      {/* BID FORM */}
-      {/* ================================================== */}
+      {/* Bid form */}
       <div className="dashboard-section">
+        <h2>Submit Your Bid</h2>
 
-        <h2>Submit Bid</h2>
-
-        {/* ================================================== */}
-        {/* MESSAGE */}
-        {/* ================================================== */}
-        {message && (
-
-          <div
-            style={{
-              padding: "12px",
-              marginBottom: "16px",
-              borderRadius: "8px",
-              fontWeight: "600",
-              background:
-                message.type === "success"
-                  ? "#dcfce7"
-                  : "#fee2e2",
-              color:
-                message.type === "success"
-                  ? "#166534"
-                  : "#991b1b",
-              border:
-                message.type === "success"
-                  ? "1px solid #86efac"
-                  : "1px solid #fca5a5",
-            }}
-          >
-            {message.text}
+        {/* Verification blocking banners */}
+        {blockReason === "unverified" && (
+          <div className="verify-alert">
+            <p>Your account isn't verified yet. Admin needs to verify you before you can bid.</p>
+            <Link to="/profile">Verify Account →</Link>
           </div>
         )}
 
-        <form
-          onSubmit={submitBid}
-          className="bid-form"
-        >
+        {blockReason === "no-docs" && (
+          <div className="verify-alert">
+            <p>You need at least one admin-verified document before you can submit a bid.</p>
+            <Link to="/contractor/my-documents">Upload Document →</Link>
+          </div>
+        )}
 
-          <input
-            type="number"
-            name="bid_amount"
-            placeholder="Bid Amount (KES)"
-            value={form.bid_amount}
-            onChange={handleChange}
-            required
-          />
+        {/* Success / error message */}
+        {message && (
+          <div className={`toast toast-${message.type}`}>
+            {message.type === "success" ? "✓" : "✕"} {message.text}
+          </div>
+        )}
 
-          <textarea
-            name="proposal_summary"
-            placeholder="Describe your proposal"
-            value={form.proposal_summary}
-            onChange={handleChange}
-            required
-          />
+        {/* Only show the form if not blocked */}
+        {!blockReason && tender.status === "OPEN" && (
+          <form onSubmit={submitBid} className="bid-form">
+            <label>Bid Amount (KES)</label>
+            <input
+              type="number"
+              name="bid_amount"
+              placeholder="e.g. 500000"
+              value={form.bid_amount}
+              onChange={handleChange}
+              required
+            />
 
-          <input
-            type="number"
-            name="completion_months"
-            placeholder="Estimated Completion (Months)"
-            value={form.completion_months}
-            onChange={handleChange}
-            required
-          />
+            <label>Proposal Summary</label>
+            <textarea
+              name="proposal_summary"
+              placeholder="Describe your approach, experience, and why you're the best fit…"
+              value={form.proposal_summary}
+              onChange={handleChange}
+              required
+            />
 
-          {/* ================================================== */}
-          {/* DOCUMENT TYPE */}
-          {/* ================================================== */}
-          <select
-            value={documentType}
-            onChange={(e) => setDocumentType(e.target.value)}
-          >
-            <option value="">
-              Select Document Type
-            </option>
+            <label>Estimated Completion (months)</label>
+            <input
+              type="number"
+              name="completion_months"
+              placeholder="e.g. 6"
+              value={form.completion_months}
+              onChange={handleChange}
+              required
+            />
 
-            <option value="BUSINESS_PERMIT">
-              Business Permit
-            </option>
+            <label>Supporting Document (optional)</label>
+            <select value={documentType} onChange={(e) => setDocumentType(e.target.value)}>
+              <option value="">Select document type</option>
+              <option value="BUSINESS_PERMIT">Business Permit</option>
+              <option value="TAX_COMPLIANCE">Tax Compliance</option>
+              <option value="NCA_CERTIFICATE">NCA Certificate</option>
+              <option value="PORTFOLIO">Portfolio</option>
+            </select>
+            <input type="file" onChange={(e) => setFile(e.target.files[0])} />
 
-            <option value="TAX_COMPLIANCE">
-              Tax Compliance
-            </option>
+            <button type="submit" disabled={submitting}>
+              {submitting ? "Submitting…" : "Submit Bid →"}
+            </button>
+          </form>
+        )}
 
-            <option value="NCA_CERTIFICATE">
-              NCA Certificate
-            </option>
-
-            <option value="PORTFOLIO">
-              Portfolio
-            </option>
-          </select>
-
-          {/* ================================================== */}
-          {/* FILE */}
-          {/* ================================================== */}
-          <input
-            type="file"
-            onChange={(e) => setFile(e.target.files[0])}
-          />
-
-          <button
-            type="submit"
-            disabled={submitting}
-          >
-            {submitting
-              ? "Submitting..."
-              : "Submit Bid"}
-          </button>
-
-        </form>
-
+        {tender.status !== "OPEN" && (
+          <p style={{ color: "var(--color-text-muted)", padding: "1rem 0" }}>
+            This tender is no longer accepting bids.
+          </p>
+        )}
       </div>
-
     </div>
   )
 }
