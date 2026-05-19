@@ -10,6 +10,8 @@ from app.bids.views.bid_schema import (
     bid_response_schema, bids_response_schema,
 )
 
+# Errors raised for unverified account/docs return 403, not 400
+VERIFICATION_ERRORS = {"Account not verified", "No verified documents"}
 
 bids_bp = Blueprint("bids", __name__, url_prefix="/api/bids")
 
@@ -20,64 +22,49 @@ bids_bp = Blueprint("bids", __name__, url_prefix="/api/bids")
 def submit_bid():
 
     try:
-
-        # =========================
-        # READ FORM DATA
-        # =========================
-        data = {
-            "tender_id": request.form.get("tender_id"),
-            "bid_amount": request.form.get("bid_amount"),
-            "proposal_summary": request.form.get("proposal_summary"),
-            "completion_months": request.form.get("completion_months"),
-        }
-
-        data = bid_create_schema.load(data)
-
-    except ValidationError as err:
-
-        return jsonify({
-            "error": "Validation failed",
-            "details": err.messages
-        }), 422
-
-    try:
-
-        bid = BidService.submit(
-            data,
-            get_jwt_identity(),
-            request.remote_addr
-        )
-
-        # =========================
-        # HANDLE FILES
-        # =========================
-        uploaded_files = request.files.getlist("file")
-
-        for uploaded_file in uploaded_files:
-
-            if uploaded_file.filename == "":
-                continue
-
-            document_data = {
-                "document_type": "BID_SUPPORT_DOCUMENT"
+        # Accept both JSON and multipart form data
+        if request.content_type and "application/json" in request.content_type:
+            raw = request.get_json() or {}
+        else:
+            raw = {
+                "tender_id": request.form.get("tender_id"),
+                "bid_amount": request.form.get("bid_amount"),
+                "proposal_summary": request.form.get("proposal_summary"),
+                "completion_months": request.form.get("completion_months"),
             }
 
-            DocumentService.upload(
-                uploaded_file,
-                document_data,
-                get_jwt_identity()
-            )
+        data = bid_create_schema.load(raw)
+
+    except ValidationError as err:
+        return jsonify({"error": "Validation failed", "details": err.messages}), 422
+
+    try:
+        result = BidService.submit(data, get_jwt_identity(), request.remote_addr)
+
+        # BidService.submit returns {"bid": <Bid>, "message": "..."} or just a Bid
+        bid_obj = result["bid"] if isinstance(result, dict) else result
+        msg = result.get("message", "Bid submitted successfully") if isinstance(result, dict) else "Bid submitted successfully"
+
+        # Handle optional file upload alongside the bid
+        uploaded_files = request.files.getlist("file")
+        for uploaded_file in uploaded_files:
+            if uploaded_file.filename == "":
+                continue
+            try:
+                DocumentService.upload(
+                    uploaded_file,
+                    {"document_type": request.form.get("document_type") or "BID_SUPPORT_DOCUMENT"},
+                    get_jwt_identity(),
+                )
+            except Exception:
+                pass  # file upload failure should not break the bid submission
 
     except ValueError as e:
+        status = 403 if str(e) in VERIFICATION_ERRORS else 400
+        return jsonify({"error": str(e)}), status
 
-        return jsonify({
-            "error": str(e)
-        }), 400
+    return jsonify({"message": msg, "bid": bid_response_schema.dump(bid_obj)}), 201
 
-    return jsonify({
-        "message": "Bid submitted successfully",
-        "bid": bid_response_schema.dump(bid)
-    }), 201
 
 @bids_bp.route("/me", methods=["GET"])
 @jwt_required()
@@ -129,52 +116,28 @@ def update_bid(bid_id):
 @jwt_required()
 @role_required("EMPLOYER")
 def employer_bids():
-
     employer_id = get_jwt_identity()
-
     try:
         bids = BidService.list_employer_bids(employer_id)
-
-        return jsonify({
-            "success": True,
-            "total": len(bids),
-            "bids": bids_response_schema.dump(bids)
-        }), 200
-
+        return jsonify({"success": True, "total": len(bids), "bids": bids_response_schema.dump(bids)}), 200
     except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-@bids_bp.route(
-    "/evaluate/<string:tender_id>",
-    methods=["POST"]
-)
+
+@bids_bp.route("/evaluate/<string:tender_id>", methods=["POST"])
 @jwt_required()
 @role_required("EMPLOYER")
 def evaluate_tender(tender_id):
-
     try:
-
-        winning_bid = (
-            BidEvaluationService.evaluate_tender(
-                tender_id
-            )
-        )
-
+        winning_bid = BidEvaluationService.evaluate_tender(tender_id)
         return jsonify({
             "message": "Tender awarded successfully",
             "winning_bid": {
                 "bid_id": winning_bid.id,
                 "contractor_id": winning_bid.contractor_id,
                 "bid_amount": winning_bid.bid_amount,
-                "score": winning_bid.evaluation_score
+                "score": winning_bid.evaluation_score,
             }
         }), 200
-
     except ValueError as e:
-
-        return jsonify({
-            "error": str(e)
-        }), 400
+        return jsonify({"error": str(e)}), 400

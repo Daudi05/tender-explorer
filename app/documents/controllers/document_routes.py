@@ -14,6 +14,8 @@ from app.documents.views.document_schema import (
     documents_response_schema,
     document_verify_schema,  # v2
 )
+from app.notifications.views.notification_service import NotificationService
+from app.auth.models.user import User
 
 documents_bp = Blueprint("documents", __name__, url_prefix="/api/documents")
 
@@ -31,6 +33,20 @@ def upload_document():
         doc = DocumentService.upload(request.files["file"], form_data, get_jwt_identity())
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+
+    # Notify all admin users that a new document needs review
+    try:
+        admins = User.query.filter_by(role="ADMIN", is_active=True).all()
+        for admin in admins:
+            NotificationService.notify(
+                user_id=admin.id,
+                type="GENERAL",
+                message=f"New document pending verification: {doc.original_filename}",
+                link="/admin/verify-documents",
+            )
+    except Exception:
+        pass  # notification failure must not break the upload
+
     return jsonify({
         "message": "Document uploaded successfully",
         "document": document_response_schema.dump(doc),
@@ -107,6 +123,18 @@ def verify_document(doc_id):
 
     doc.verification_status = data["verification_status"]
     db.session.commit()
+
+    # Notify the document uploader of the outcome
+    try:
+        status_label = data["verification_status"]  # "verified" or "rejected"
+        NotificationService.notify(
+            user_id=doc.uploader_id,
+            type="GENERAL",
+            message=f"Your document '{doc.original_filename}' was {status_label}.",
+            link="/contractor/my-documents",
+        )
+    except Exception:
+        pass  # notification failure must not break the verify action
 
     return jsonify({
         "message": f"verification_status set to {data['verification_status']}",

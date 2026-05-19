@@ -7,6 +7,8 @@ from app.tenders.views.tender_service import TenderService
 from app.tenders.models.tender import Tender
 from app.auth.models.user import User
 from app.tenders.views.auto_award_service import TenderAutoAwardService
+from app.documents.models.document import Document
+from app.notifications.views.notification_service import NotificationService
 
 
 # FRAUD SCORING ENGINE
@@ -51,6 +53,14 @@ class BidService:
 
         if not contractor.is_verified:
             raise ValueError("Account not verified")
+
+        # Require at least one admin-verified document before bidding
+        verified_docs = Document.query.filter_by(
+            uploader_id=contractor_id,
+            verification_status="verified"
+        ).count()
+        if verified_docs == 0:
+            raise ValueError("No verified documents")
 
         # -----------------------------
         # TENDER VALIDATION
@@ -136,6 +146,17 @@ class BidService:
         bid.is_flagged = bid.fraud_score >= 60
 
         db.session.commit()
+
+        # Notify the employer that a new bid arrived
+        try:
+            NotificationService.notify(
+                user_id=tender.employer_id,
+                type="BID",
+                message=f"New bid received on '{tender.title}'",
+                link=f"/employer/tenders/{tender.id}/bids",
+            )
+        except Exception:
+            pass  # notification failure must not block bid creation
 
         # -----------------------------
         # AUTO CLOSE + AUTO AWARD

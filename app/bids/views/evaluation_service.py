@@ -3,6 +3,7 @@ from datetime import datetime
 from app.extensions import db
 from app.bids.models.bid import Bid
 from app.tenders.models.tender import Tender
+from app.notifications.views.notification_service import NotificationService
 
 
 class BidEvaluationService:
@@ -99,5 +100,25 @@ class BidEvaluationService:
                     bid.status = "REJECTED"
 
         db.session.commit()
+
+        # Fire notifications — winner and losers
+        if winning_bid:
+            try:
+                NotificationService.notify(
+                    user_id=winning_bid.contractor_id,
+                    type="AWARD",
+                    message=f"Congratulations! You won the tender: {tender.title}",
+                    link="/contractor/my-awards",
+                )
+                for bid in bids:
+                    if bid.id != winning_bid.id:
+                        NotificationService.notify(
+                            user_id=bid.contractor_id,
+                            type="TENDER",
+                            message=f"Tender '{tender.title}' has been awarded to another bidder.",
+                            link="/contractor/browse",
+                        )
+            except Exception:
+                pass  # notification failure must not roll back the award
 
         return winning_bid
