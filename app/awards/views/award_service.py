@@ -12,8 +12,9 @@ class AwardService:
         })
         NotificationService.notify(
             user_id=data["awarded_to"],
-            message=f"Congratulations! You won a contract worth ${data['award_amount']:.2f}",
-            link=f"/api/awards/{award.id}",
+            type="AWARD",
+            message=f"Congratulations! You won a contract worth KES {data['award_amount']:,.0f}",
+            link="/contractor/my-awards",
         )
         return award
 

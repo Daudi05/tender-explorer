@@ -9,6 +9,8 @@ from app.bids.views.bid_schema import (
     bid_create_schema, bid_update_schema,
     bid_response_schema, bids_response_schema,
 )
+from app.auth.models.user import User
+from app.tenders.views.tender_service import TenderService
 
 # Contractors without admin-verified documents get 403, not 400
 VERIFICATION_ERRORS = {"No verified documents"}
@@ -75,6 +77,17 @@ def my_bids():
 @bids_bp.route("/tender/<string:tender_id>", methods=["GET"])
 @jwt_required()
 def bids_for_tender(tender_id):
+    requester_id = get_jwt_identity()
+    requester = User.query.get(requester_id)
+    if not requester:
+        return jsonify({"error": "User not found"}), 404
+    # Admins can see any tender's bids; employers only their own
+    if requester.role == "EMPLOYER":
+        tender = TenderService.get(tender_id)
+        if not tender or tender.employer_id != requester_id:
+            return jsonify({"error": "Access denied"}), 403
+    elif requester.role != "ADMIN":
+        return jsonify({"error": "Access denied"}), 403
     return jsonify({"bids": bids_response_schema.dump(BidService.list_for_tender(tender_id))}), 200
 
 

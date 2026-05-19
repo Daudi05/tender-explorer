@@ -33,3 +33,5 @@ class Document(db.Model):
         nullable=False,
         index=True,
     )
+
+    uploader = db.relationship("User", foreign_keys=[uploader_id], lazy="select")

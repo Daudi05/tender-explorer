@@ -16,10 +16,17 @@ class DocumentResponseSchema(Schema):
     file_size = fields.Int()
     document_type = fields.Str()
     uploader_id = fields.Str()
+    uploader_name = fields.Method("get_uploader_name")
     bid_id = fields.Str(allow_none=True)
     tender_id = fields.Str(allow_none=True)
     created_at = fields.DateTime()
     verification_status = fields.Str()  # v2
+
+    def get_uploader_name(self, obj):
+        try:
+            return obj.uploader.name if obj.uploader else None
+        except Exception:
+            return None
 
 
 class DocumentUploadSchema(Schema):

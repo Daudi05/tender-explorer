@@ -5,16 +5,22 @@ class BidResponseSchema(Schema):
     id = fields.Str()
     tender_id = fields.Str()
     contractor_id = fields.Str()
+    contractor_name = fields.Method("get_contractor_name")
     bid_amount = fields.Float()
     proposal_summary = fields.Str(allow_none=True)
     completion_months = fields.Int(allow_none=True)
     status = fields.Str()
-    submission_ip = fields.Str(allow_none=True)
     fraud_score = fields.Float()
     is_flagged = fields.Bool()
     is_winner = fields.Bool()
     evaluation_score = fields.Float()
     created_at = fields.DateTime()
+
+    def get_contractor_name(self, obj):
+        try:
+            return obj.contractor.name if obj.contractor else None
+        except Exception:
+            return None
 
 
 class BidCreateSchema(Schema):

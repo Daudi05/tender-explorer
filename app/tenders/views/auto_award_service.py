@@ -17,10 +17,8 @@ class TenderAutoAwardService:
         if tender.status != "OPEN":
             raise ValueError("Tender already processed")
 
-        #  CALL YOUR EXISTING LOGIC
+        #  CALL YOUR EXISTING LOGIC (evaluate_tender commits internally)
         winner = BidEvaluationService.evaluate_tender(tender_id)
-
-        db.session.commit()
 
         return winner
     

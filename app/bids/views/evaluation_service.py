@@ -53,7 +53,7 @@ class BidEvaluationService:
             # COMPLETION TIME SCORE (skip if no bids have completion_months)
             time_score = (
                 (fastest_time / bid.completion_months) * 20
-                if fastest_time and bid.completion_months else 0
+                if fastest_time and bid.completion_months and bid.completion_months > 0 else 0
             )
 
             # FRAUD PENALTY (score is 0–100 scale)

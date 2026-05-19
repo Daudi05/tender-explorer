@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from marshmallow import ValidationError
+from app.middleware.role_middleware import role_required
 from app.awards.views.award_service import AwardService
 from app.awards.views.award_schema import (
     award_create_schema,
@@ -14,6 +15,7 @@ awards_bp = Blueprint("awards", __name__, url_prefix="/api/awards")
 
 @awards_bp.route("", methods=["POST"])
 @jwt_required()
+@role_required("EMPLOYER")
 def create_award():
     try:
         data = award_create_schema.load(request.get_json() or {})

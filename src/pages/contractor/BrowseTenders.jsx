@@ -6,12 +6,13 @@ import TenderCard from '../../components/TenderCard'
 export default function BrowseTenders() {
   const [tenders, setTenders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
 
   useEffect(() => {
     apiFetch('/tenders')
       .then((data) => setTenders(data.tenders || []))
-      .catch(console.error)
+      .catch((err) => setError(err.message || 'Failed to load tenders'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -23,6 +24,7 @@ export default function BrowseTenders() {
   const open = filtered.filter((t) => t.status === 'OPEN')
 
   if (loading) return <div className="stub-page"><p>Loading tenders…</p></div>
+  if (error) return <div className="stub-page"><p style={{ color: '#ef4444' }}>{error}</p></div>
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto' }}>
