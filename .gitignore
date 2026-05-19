@@ -1,5 +1,42 @@
+# Frontend
+node_modules
+dist
+.env.local
+
+# Python virtual environment
 venv/
+env/
+.venv/
+
+# Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Database
 *.db
+*.sqlite
+*.sqlite3
+
+# Uploads — keep folder structure, ignore actual files
+uploads/*
+!uploads/.gitkeep
+
+# Flask instance
+instance/
+
+# Secrets
 .env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Nested clones
+tender-explorer/

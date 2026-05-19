@@ -3,11 +3,9 @@ from app.notifications.models.notification_repo import NotificationRepository
 
 class NotificationService:
     @staticmethod
-    def notify(user_id, message, link=None):
+    def notify(user_id, message, link=None, type="GENERAL"):
         return NotificationRepository.create({
-            "user_id": user_id,
-            "message": message,
-            "link": link,
+            "user_id": user_id, "message": message, "link": link, "type": type,
         })
 
     @staticmethod
@@ -19,10 +17,10 @@ class NotificationService:
         return NotificationRepository.count_unread(user_id)
 
     @staticmethod
-    def mark_read(notif, requester_id):
-        if notif.user_id != requester_id:
-            raise PermissionError("Cannot mark someone else's notification as read")
-        return NotificationRepository.mark_read(notif)
+    def mark_read(n, requester_id):
+        if n.user_id != requester_id:
+            raise PermissionError("Not your notification")
+        return NotificationRepository.mark_read(n)
 
     @staticmethod
     def mark_all_read(user_id):

@@ -1,242 +1,237 @@
-from flask import jsonify
-
-from app.bids.models.bid import Bid
-from app.bids.models.bid_repo import create_bid
+from sqlalchemy import func
 from app.extensions import db
 
+from app.bids.models.bid import Bid
+from app.bids.models.bid_repo import BidRepository
+from app.tenders.views.tender_service import TenderService
+from app.tenders.models.tender import Tender
+from app.auth.models.user import User
+from app.tenders.views.auto_award_service import TenderAutoAwardService
 
-ALLOWED_STATUS = [
-    "Submitted",
-    "In Review",
-    "Awarded",
-    "Rejected"
-]
+
+# FRAUD SCORING ENGINE
+
+def _calculate_fraud_score(bid_amount, tender_avg, submission_ip, other_ips):
+    score = 0.0
+
+    if tender_avg > 0:
+        # suspicious LOW bid
+        if bid_amount < (tender_avg * 0.5):
+            score += 40
+
+        # suspicious HIGH bid
+        if bid_amount > (tender_avg * 2):
+            score += 30
+
+    # IP reuse signal
+    if submission_ip and submission_ip in other_ips:
+        score += 20
+
+    return min(score, 100)
 
 
-# CREATE BID
-def submit_bid(data):
 
-    try:
+# BID SERVICE
+#
+class BidService:
 
-        required_fields = [
-            "contractor_id",
-            "tender_id",
-            "amount",
-            "proposal"
-        ]
+    @staticmethod
+    def submit(data, contractor_id, request_ip):
 
-        # CHECK MISSING FIELDS
-        for field in required_fields:
+        # -----------------------------
+        # USER VALIDATION
+        # -----------------------------
+        contractor = User.query.get(contractor_id)
 
-            if field not in data:
-                return jsonify({
-                    "error": f"{field} is required"
-                }), 400
+        if not contractor:
+            raise ValueError("User not found")
 
-            if str(data[field]).strip() == "":
-                return jsonify({
-                    "error": f"{field} cannot be empty"
-                }), 400
+        if contractor.role != "CONTRACTOR":
+            raise ValueError("Only contractors can submit bids")
 
-        # VALIDATE contractor_id
-        if not isinstance(data["contractor_id"], int):
-            return jsonify({
-                "error": "contractor_id must be an integer"
-            }), 400
+        if not contractor.is_verified:
+            raise ValueError("Account not verified")
 
-        # VALIDATE tender_id
-        if not isinstance(data["tender_id"], int):
-            return jsonify({
-                "error": "tender_id must be an integer"
-            }), 400
+        # -----------------------------
+        # TENDER VALIDATION
+        # -----------------------------
+        tender = TenderService.get(data["tender_id"])
 
-        # VALIDATE amount
-        if not isinstance(data["amount"], (int, float)):
-            return jsonify({
-                "error": "amount must be a number"
-            }), 400
+        if not tender:
+            raise ValueError("Tender not found")
 
-        # NEGATIVE AMOUNT CHECK
-        if data["amount"] <= 0:
-            return jsonify({
-                "error": "amount must be greater than zero"
-            }), 400
+        if TenderService.is_deadline_passed(tender):
+            raise ValueError("Tender deadline has passed")
 
-        # VALIDATE PROPOSAL
-        if len(data["proposal"]) < 10:
-            return jsonify({
-                "error": "proposal must be at least 10 characters"
-            }), 400
+        if tender.status != "OPEN":
+            raise ValueError("Tender is not open for bidding")
 
+        if tender.employer_id == contractor_id:
+            raise ValueError("You cannot bid on your own tender")
+
+        # -----------------------------
+        # MAXIMUM BID LIMIT
+        # -----------------------------
+        current_bid_count = Bid.query.filter_by(
+            tender_id=data["tender_id"]
+        ).count()
+
+        if current_bid_count >= 10:
+            raise ValueError(
+                "This tender has reached the maximum number of bids"
+            )
+
+        # -----------------------------
+        # DUPLICATE CHECK
+        # -----------------------------
+        if BidRepository.existing(
+            data["tender_id"],
+            contractor_id
+        ):
+            raise ValueError(
+                "You already submitted a bid for this tender"
+            )
+
+        # -----------------------------
         # CREATE BID
-        bid = create_bid(data)
+        # -----------------------------
+        bid = Bid(
+            tender_id=data["tender_id"],
+            contractor_id=contractor_id,
+            bid_amount=data["bid_amount"],
+            proposal_summary=data.get("proposal_summary"),
+            completion_months=data.get("completion_months"),
+            submission_ip=request_ip,
+            status="SUBMITTED",
+        )
 
-        return jsonify({
+        db.session.add(bid)
+        db.session.flush()  # get bid.id before commit
+
+        # -----------------------------
+        # FRAUD SCORING
+        # -----------------------------
+        avg = db.session.query(
+            func.avg(Bid.bid_amount)
+        ).filter(
+            Bid.tender_id == data["tender_id"],
+            Bid.id != bid.id
+        ).scalar() or 0
+
+        other_ips = {
+            b.submission_ip for b in Bid.query.filter(
+                Bid.tender_id == data["tender_id"],
+                Bid.id != bid.id
+            ).all()
+            if b.submission_ip
+        }
+
+        bid.fraud_score = _calculate_fraud_score(
+            bid.bid_amount,
+            avg,
+            request_ip,
+            other_ips
+        )
+
+        bid.is_flagged = bid.fraud_score >= 60
+
+        db.session.commit()
+
+        # -----------------------------
+        # AUTO CLOSE + AUTO AWARD
+        # -----------------------------
+        updated_bid_count = Bid.query.filter_by(
+            tender_id=data["tender_id"]
+        ).count()
+
+        if updated_bid_count >= 10:
+
+            # Close and award automatically
+            winner = TenderAutoAwardService.close_and_award(
+                tender.id
+            )
+
+            return {
+                "message": "Bid submitted successfully. Tender automatically closed and awarded.",
+                "bid": bid,
+                "winner": winner
+            }
+
+        # -----------------------------
+        # NORMAL RESPONSE
+        # -----------------------------
+        return {
             "message": "Bid submitted successfully",
-            "bid_id": bid.id
-        }), 201
+            "bid": bid
+        }
+            
 
-    except Exception as e:
+        # -----------------------------
+        # GET SINGLE BID
+        # -----------------------------
+    @staticmethod
+    def get(bid_id):
+        return BidRepository.get_by_id(bid_id)
 
-        db.session.rollback()
+    # -----------------------------
+    # LIST CONTRACTOR BIDS
+    # -----------------------------
+    @staticmethod
+    def list_mine(contractor_id):
+        return BidRepository.list_by_contractor(contractor_id)
 
-        return jsonify({
-            "error": "Internal server error",
-            "details": str(e)
-        }), 500
+    # -----------------------------
+    # LIST TENDER BIDS
+    # -----------------------------
+    @staticmethod
+    def list_for_tender(tender_id):
+        return BidRepository.list_by_tender(tender_id)
 
+    # -----------------------------
+    # LIST FLAGGED BIDS (ADMIN)
+    # -----------------------------
+    @staticmethod
+    def list_flagged():
+        return BidRepository.list_flagged()
 
-# GET ALL BIDS
-def get_all_bids():
+    # -----------------------------
+    # UPDATE BID (SAFE)
+    # -----------------------------
+    @staticmethod
+    def update(bid, data, contractor_id):
 
-    try:
+        if bid.contractor_id != contractor_id:
+            raise PermissionError("Only the bid owner can update")
 
-        bids = Bid.query.all()
+        tender = TenderService.get(bid.tender_id)
 
-        results = []
+        if tender and TenderService.is_deadline_passed(tender):
+            raise ValueError("Cannot edit - tender deadline passed")
 
-        for bid in bids:
+        # ONLY allow safe fields
+        allowed_fields = {
+            "bid_amount",
+            "proposal_summary",
+            "completion_months"
+        }
 
-            results.append({
-                "id": bid.id,
-                "uuid": bid.uuid,
-                "contractor_id": bid.contractor_id,
-                "tender_id": bid.tender_id,
-                "amount": bid.amount,
-                "proposal": bid.proposal,
-                "status": bid.status,
-                "created_at": bid.created_at
-            })
+        for key, value in data.items():
+            if key in allowed_fields:
+                setattr(bid, key, value)
 
-        return jsonify(results), 200
+        return BidRepository.update(bid)
 
-    except Exception as e:
+    # -----------------------------
+    # EMPLOYER VIEW: ALL BIDS
+    # -----------------------------
+    @staticmethod
+    def list_employer_bids(employer_id):
 
-        return jsonify({
-            "error": "Failed to fetch bids",
-            "details": str(e)
-        }), 500
+        bids = (
+            db.session.query(Bid)
+            .join(Tender, Bid.tender_id == Tender.id)
+            .filter(Tender.employer_id == employer_id)
+            .all()
+        )
 
-
-# GET ONE BID
-def get_single_bid(bid_id):
-
-    try:
-
-        bid = Bid.query.get(bid_id)
-
-        if not bid:
-            return jsonify({
-                "error": "Bid not found"
-            }), 404
-
-        return jsonify({
-            "id": bid.id,
-            "uuid": bid.uuid,
-            "contractor_id": bid.contractor_id,
-            "tender_id": bid.tender_id,
-            "amount": bid.amount,
-            "proposal": bid.proposal,
-            "status": bid.status,
-            "created_at": bid.created_at
-        }), 200
-
-    except Exception as e:
-
-        return jsonify({
-            "error": "Failed to fetch bid",
-            "details": str(e)
-        }), 500
-
-
-# UPDATE BID
-def update_single_bid(bid_id, data):
-
-    try:
-
-        bid = Bid.query.get(bid_id)
-
-        if not bid:
-            return jsonify({
-                "error": "Bid not found"
-            }), 404
-
-        # UPDATE AMOUNT
-        if "amount" in data:
-
-            if not isinstance(data["amount"], (int, float)):
-                return jsonify({
-                    "error": "amount must be a number"
-                }), 400
-
-            if data["amount"] <= 0:
-                return jsonify({
-                    "error": "amount must be greater than zero"
-                }), 400
-
-            bid.amount = data["amount"]
-
-        # UPDATE PROPOSAL
-        if "proposal" in data:
-
-            if len(data["proposal"]) < 10:
-                return jsonify({
-                    "error": "proposal must be at least 10 characters"
-                }), 400
-
-            bid.proposal = data["proposal"]
-
-        # UPDATE STATUS
-        if "status" in data:
-
-            if data["status"] not in ALLOWED_STATUS:
-                return jsonify({
-                    "error": "Invalid bid status"
-                }), 400
-
-            bid.status = data["status"]
-
-        db.session.commit()
-
-        return jsonify({
-            "message": "Bid updated successfully"
-        }), 200
-
-    except Exception as e:
-
-        db.session.rollback()
-
-        return jsonify({
-            "error": "Failed to update bid",
-            "details": str(e)
-        }), 500
-
-
-# DELETE BID
-def delete_single_bid(bid_id):
-
-    try:
-
-        bid = Bid.query.get(bid_id)
-
-        if not bid:
-            return jsonify({
-                "error": "Bid not found"
-            }), 404
-
-        db.session.delete(bid)
-
-        db.session.commit()
-
-        return jsonify({
-            "message": "Bid deleted successfully"
-        }), 200
-
-    except Exception as e:
-
-        db.session.rollback()
-
-        return jsonify({
-            "error": "Failed to delete bid",
-            "details": str(e)
-        }), 500
+        return bids

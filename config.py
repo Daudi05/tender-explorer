@@ -1,9 +1,11 @@
 import os
-from datetime import timedelta
-
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///tender_explorer.db")
+    # Production deployments should override these via environment variables
+    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production-please")
+    JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "dev-jwt-secret-key-must-be-32-bytes-or-more-for-hs256")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URI", "sqlite:///tender.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "jwt-secret-key")
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(seconds=int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES", 3600)))
+    UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), "uploads")
+    MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10 MB
+
+   

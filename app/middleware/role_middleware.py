@@ -1,44 +1,36 @@
 from functools import wraps
-
-from flask import jsonify
-from flask_jwt_extended import (
-    get_jwt,
-    verify_jwt_in_request
-)
+from flask_jwt_extended import verify_jwt_in_request, get_jwt
+from app.utils.validations import handle_error
 
 
 def role_required(*allowed_roles):
+    """
+    Role-based access control decorator.
 
+    Usage:
+        @role_required("ADMIN")
+        @role_required("EMPLOYER", "ADMIN")
+    """
     def wrapper(fn):
-
         @wraps(fn)
         def decorator(*args, **kwargs):
+            # Ensure JWT is present
+            verify_jwt_in_request()
 
-            try:
-                verify_jwt_in_request()
+            # Get JWT claims
+            claims = get_jwt()
 
-                claims = get_jwt()
+            # Extract role safely
+            user_role = claims.get("role")
 
-                role = claims.get("role")
+            # If role missing or not allowed
+            if not user_role or user_role not in allowed_roles:
+                return handle_error(
+                    f"Access Denied: Requires {', '.join(allowed_roles)} role(s)",
+                    403
+                )
 
-                if role not in allowed_roles:
-                    return jsonify({
-                        "success": False,
-                        "message": "Access forbidden",
-                        "required_roles": allowed_roles,
-                        "your_role": role
-                    }), 403
-
-                return fn(*args, **kwargs)
-
-            except Exception as error:
-
-                return jsonify({
-                    "success": False,
-                    "message": "Authorization failed",
-                    "error": str(error)
-                }), 401
+            return fn(*args, **kwargs)
 
         return decorator
-
     return wrapper
