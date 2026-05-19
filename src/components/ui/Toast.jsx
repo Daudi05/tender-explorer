@@ -1,42 +1,32 @@
-import React, { useEffect } from 'react';
+import { useEffect, useState } from 'react'
+import './Toast.css'
 
-export const Toast = ({
-  message,
-  type = 'success', // success, error, warning, info
-  isVisible,
-  onClose,
-  duration = 3000
-}) => {
+export default function ToastContainer() {
+  const [toasts, setToasts] = useState([])
+
   useEffect(() => {
-    if (isVisible && duration) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, duration);
-      return () => clearTimeout(timer);
+    function handleToast(e) {
+      const { message, type = 'success' } = e.detail
+      const id = Date.now()
+      setToasts((prev) => [...prev, { id, message, type }])
+      setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500)
     }
-  }, [isVisible, duration, onClose]);
+    window.addEventListener('toast', handleToast)
+    return () => window.removeEventListener('toast', handleToast)
+  }, [])
 
-  if (!isVisible) return null;
-
-  const styles = {
-    success: 'bg-green-600 text-white shadow-lg',
-    error: 'bg-red-600 text-white shadow-lg',
-    warning: 'bg-yellow-500 text-white shadow-lg',
-    info: 'bg-blue-600 text-white shadow-lg'
-  };
+  if (!toasts.length) return null
 
   return (
-    <div className="fixed bottom-5 right-5 z-50">
-      <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl max-w-sm ${styles[type]}`}>
-        <span className="text-sm font-semibold">{message}</span>
-        <button onClick={onClose} className="focus:outline-none opacity-80 hover:opacity-100">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
+    <div className="toast-container">
+      {toasts.map((t) => (
+        <div key={t.id} className={`toast-pill toast-pill--${t.type}`}>
+          <span className="toast-pill-icon">
+            {t.type === 'success' ? '✓' : t.type === 'error' ? '✕' : 'ℹ'}
+          </span>
+          {t.message}
+        </div>
+      ))}
     </div>
-  );
-};
-
-export default Toast;
+  )
+}
