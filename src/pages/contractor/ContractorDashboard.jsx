@@ -1,97 +1,96 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { apiFetch } from "../../api/client"
+import { useAuth } from "../../context/AuthContext"
+import TenderCard from "../../components/TenderCard"
 import "../stub.css"
 
 export default function ContractorDashboard() {
-  const [tenders, setTenders] = useState([])
+  const { user } = useAuth()
   const navigate = useNavigate()
+  const [tenders, setTenders] = useState([])
+  const [myBids, setMyBids] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchTenders() {
-      try {
-        const data = await apiFetch("/api/tenders")
-
-        console.log("API RESPONSE:", data)
-
-        setTenders(data.tenders || [])
-      } catch (error) {
-        console.error("Fetch error:", error)
+    Promise.allSettled([
+      apiFetch("/tenders"),
+      apiFetch("/bids/me"),
+    ]).then(([tendersRes, bidsRes]) => {
+      if (tendersRes.status === "fulfilled") {
+        const d = tendersRes.value
+        setTenders(Array.isArray(d) ? d : d.tenders ?? [])
       }
-    }
-
-    fetchTenders()
+      if (bidsRes.status === "fulfilled") {
+        const d = bidsRes.value
+        setMyBids(Array.isArray(d) ? d : d.bids ?? [])
+      }
+    }).finally(() => setLoading(false))
   }, [])
 
-  const stats = [
-    { title: "Available Tenders", value: tenders.length },
-    { title: "Awards Won", value: 6 },
-    { title: "Reputation Score", value: "92%" },
-    { title: "Current Ranking", value: "#3" },
-  ]
+  const openTenders = tenders.filter((t) => t.status === "OPEN")
+  const awardedBids = myBids.filter((b) => b.is_winner)
+  const pendingBids = myBids.filter((b) => b.status === "PENDING" || b.status === "OPEN")
+
+  if (loading) return <div className="stub-page"><p>Loading dashboard…</p></div>
 
   return (
     <div className="dashboard-page">
+      {/* Inner nav */}
+      <div className="employer-navbar">
+        <span style={{ fontWeight: 800, fontSize: "1rem", color: "white" }}>Contractor Panel</span>
+        <div className="nav-links">
+          <button onClick={() => navigate("/contractor/browse")}>Browse Tenders</button>
+          <button onClick={() => navigate("/contractor/my-bids")}>My Bids</button>
+          <button onClick={() => navigate("/contractor/my-awards")}>My Awards</button>
+          <button onClick={() => navigate("/contractor/my-documents")}>Documents</button>
+          <button onClick={() => navigate("/profile")}>Profile</button>
+        </div>
+      </div>
 
       <div className="dashboard-header">
-        <h1>Contractor Dashboard</h1>
-
-        <p>
-          Browse available tenders and track contractor performance.
-        </p>
+        <h1>Welcome, {user?.name || "Contractor"}</h1>
+        <p>Find tenders, submit bids, and track your awards</p>
       </div>
 
-      {/* STATS */}
       <div className="dashboard-grid">
-        {stats.map((stat, index) => (
-          <div key={index} className="dashboard-card">
-            <h3>{stat.title}</h3>
-            <h1>{stat.value}</h1>
-          </div>
-        ))}
+        <div className="dashboard-card">
+          <h3>Open Tenders</h3>
+          <h1>{openTenders.length}</h1>
+        </div>
+        <div className="dashboard-card">
+          <h3>My Bids</h3>
+          <h1>{myBids.length}</h1>
+        </div>
+        <div className="dashboard-card">
+          <h3>Pending Bids</h3>
+          <h1>{pendingBids.length}</h1>
+        </div>
+        <div className="dashboard-card">
+          <h3>Awards Won</h3>
+          <h1>{awardedBids.length}</h1>
+        </div>
       </div>
 
-      {/* AVAILABLE TENDERS */}
       <div className="dashboard-section">
-        <h2>Available Tenders</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", paddingBottom: "0.875rem", borderBottom: "1px solid #f3f0ff" }}>
+          <h2 style={{ margin: 0, border: 0, padding: 0 }}>Open Tenders</h2>
+          <button
+            onClick={() => navigate("/contractor/browse")}
+            style={{ padding: "0.45rem 1rem", background: "rgba(124,58,237,0.1)", color: "#7c3aed", border: "1px solid rgba(124,58,237,0.2)", borderRadius: 9999, fontWeight: 600, fontSize: "0.85rem", cursor: "pointer" }}
+          >
+            View all →
+          </button>
+        </div>
 
-        {tenders.length === 0 ? (
-          <p>No tenders available</p>
+        {openTenders.length === 0 ? (
+          <p style={{ color: "#9ca3af", textAlign: "center", padding: "2rem" }}>No open tenders at the moment.</p>
         ) : (
-          <table className="dashboard-table">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Description</th>
-                <th>Budget</th>
-                <th>Deadline</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {tenders.map((tender) => (
-                <tr key={tender.id}>
-                  <td>{tender.title}</td>
-                  <td>{tender.description}</td>
-                  <td>KES {tender.budget}</td>
-                  <td>{tender.deadline}</td>
-
-                  {/* ✅ NEW: BID BUTTON */}
-                  <td>
-                    <button
-                      onClick={() =>
-                        navigate(`/contractor/tenders/${tender.id}`)
-                      }
-                    >
-                      Place Bid
-                    </button>
-                  </td>
-
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
+            {openTenders.slice(0, 6).map((tender) => (
+              <TenderCard key={tender.id} tender={tender} />
+            ))}
+          </div>
         )}
       </div>
     </div>
