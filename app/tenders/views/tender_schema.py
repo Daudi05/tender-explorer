@@ -1,32 +1,45 @@
-from marshmallow import fields
-
-from app.extensions import ma
-
-class TenderSchema(ma.Schema):
-
-    uuid = fields.String(dump_only=True)
-
-    tender_code = fields.String(dump_only=True)
-
-    title = fields.String(required=True)
-
-    category = fields.String(required=True)
-
-    company_name = fields.String(required=True)
-
-    description = fields.String(required=True)
-
-    budget = fields.Decimal(required=True)
-
-    completion_time = fields.Integer(required=True)
-
-    image_url = fields.String()
-
-    employer_id = fields.Integer(dump_only=True)
-
-    created_at = fields.DateTime(dump_only=True)
+from datetime import datetime
+from marshmallow import Schema, fields, validate, validates, ValidationError
 
 
-single_tender_schema = TenderSchema()
+class TenderResponseSchema(Schema):
+    id = fields.Str()
+    title = fields.Str()
+    description = fields.Str()
+    category = fields.Str()
+    budget = fields.Float()
+    deadline = fields.DateTime()
+    employer_id = fields.Str()
+    status = fields.Str()
+    winning_bid_id = fields.Str(allow_none=True)
+    awarded_at = fields.DateTime(allow_none=True)
+    created_at = fields.DateTime()
 
-multiple_tender_schema = TenderSchema(many=True)
+
+class TenderCreateSchema(Schema):
+    title = fields.Str(required=True, validate=validate.Length(min=3, max=200))
+    description = fields.Str(required=True, validate=validate.Length(min=10))
+    category = fields.Str(required=True)
+    budget = fields.Float(required=True, validate=validate.Range(min=0))
+    deadline = fields.DateTime(required=True)
+
+    @validates("deadline")
+    def deadline_future(self, value, **kwargs):
+        if value <= datetime.utcnow():
+            raise ValidationError("Deadline must be in the future")
+
+
+class TenderUpdateSchema(Schema):
+    title = fields.Str(validate=validate.Length(min=3, max=200))
+    description = fields.Str(validate=validate.Length(min=10))
+    category = fields.Str()
+    budget = fields.Float(validate=validate.Range(min=0))
+    deadline = fields.DateTime()
+    status = fields.Str(validate=validate.OneOf(["OPEN", "CLOSED", "AWARDED"]))
+    winning_bid_id = fields.Str(allow_none=True)
+
+
+tender_response_schema = TenderResponseSchema()
+tenders_response_schema = TenderResponseSchema(many=True)
+tender_create_schema = TenderCreateSchema()
+tender_update_schema = TenderUpdateSchema()

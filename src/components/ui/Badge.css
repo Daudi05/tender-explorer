@@ -1,0 +1,17 @@
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+.ui-badge--default { background: var(--color-surface-hover); color: var(--color-text-secondary); }
+/* Text colors use slightly darker shades of each token for readable contrast on light backgrounds.
+   These are the only values that don't have direct CSS variable equivalents in globals.css. */
+.ui-badge--success { background: var(--color-success-bg);  color: var(--color-success); }
+.ui-badge--warning { background: var(--color-warning-bg);  color: var(--color-warning); }
+.ui-badge--danger  { background: var(--color-danger-bg);   color: var(--color-danger); }
+.ui-badge--info    { background: var(--color-info-light);  color: var(--color-info); }
