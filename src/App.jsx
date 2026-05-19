@@ -21,6 +21,7 @@ import EmployerDashboard from "./pages/employer/EmployerDashboard"
 import MyTenders from "./pages/employer/MyTenders"
 import CreateTender from "./pages/employer/CreateTender"
 import TenderBids from "./pages/employer/TenderBids"
+import AwardTender from "./pages/employer/AwardTender"
 
 // Contractor
 import ContractorDashboard from "./pages/contractor/ContractorDashboard"
@@ -62,6 +63,7 @@ export default function App() {
             <Route path="/employer/my-tenders" element={<MyTenders />} />
             <Route path="/employer/create-tender" element={<CreateTender />} />
             <Route path="/employer/tenders/:id/bids" element={<TenderBids />} />
+            <Route path="/employer/award/:id" element={<AwardTender />} />
           </Route>
 
           {/* ================= CONTRACTOR ================= */}

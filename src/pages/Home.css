@@ -9,7 +9,9 @@
 
 /* ---- HERO ---- */
 .hero-section {
-  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  background:
+    linear-gradient(135deg, rgba(15,12,41,0.88) 0%, rgba(48,43,99,0.85) 50%, rgba(36,36,62,0.92) 100%),
+    url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1920&q=80&auto=format&fit=crop') center/cover no-repeat;
   padding: 6rem 2rem 5rem;
   text-align: center;
   position: relative;
