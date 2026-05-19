@@ -13,7 +13,15 @@ const STATUS_STYLES = {
 function StatusBadge({ status }) {
   const s = STATUS_STYLES[status] || STATUS_STYLES.CLOSED
   return (
-    <span style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}`, borderRadius: 9999, padding: "3px 12px", fontSize: "0.75rem", fontWeight: 700 }}>
+    <span style={{
+      background: s.bg,
+      color: s.color,
+      border: `1px solid ${s.border}`,
+      borderRadius: 9999,
+      padding: "3px 12px",
+      fontSize: "0.75rem",
+      fontWeight: 700
+    }}>
       {status}
     </span>
   )
@@ -23,7 +31,7 @@ export default function EmployerDashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [tenders, setTenders] = useState([])
-  const [bidCounts, setBidCounts] = useState({}) // tender_id → count
+  const [bidCounts, setBidCounts] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -34,16 +42,17 @@ export default function EmployerDashboard() {
           apiFetch("/tenders/me"),
           apiFetch("/bids/employer/all"),
         ])
+
         const tenderList = tenderData.tenders || []
         setTenders(tenderList)
 
-        // Build bid count map: tender_id → number of bids
         const bids = bidData.bids || []
         const counts = {}
         bids.forEach((b) => {
           counts[b.tender_id] = (counts[b.tender_id] || 0) + 1
         })
         setBidCounts(counts)
+
       } catch {
         setError("Failed to load dashboard")
       } finally {
@@ -61,13 +70,39 @@ export default function EmployerDashboard() {
 
   return (
     <div className="dashboard-page">
+
+      {/* ✅ BACK BUTTON ADDED ONLY */}
+      <button
+        onClick={() => navigate(-1)}
+        style={{
+          marginBottom: "1rem",
+          padding: "8px 14px",
+          borderRadius: "8px",
+          border: "1px solid var(--color-border)",
+          background: "var(--color-surface-hover)",
+          cursor: "pointer",
+          fontWeight: 600
+        }}
+      >
+        ← Back
+      </button>
+
       {/* Inner nav */}
       <div className="employer-navbar">
-        <span style={{ fontWeight: 700, fontSize: "1rem", color: "white" }}>Employer Panel</span>
+        <span style={{ fontWeight: 700, fontSize: "1rem", color: "white" }}>
+          Employer Panel
+        </span>
+
         <div className="nav-links">
-          <button onClick={() => navigate("/employer/create-tender")}>+ Create Tender</button>
-          <button onClick={() => navigate("/employer/my-tenders")}>My Tenders</button>
-          <button onClick={() => navigate("/profile")}>Profile</button>
+          <button onClick={() => navigate("/employer/create-tender")}>
+            + Create Tender
+          </button>
+          <button onClick={() => navigate("/employer/my-tenders")}>
+            My Tenders
+          </button>
+          <button onClick={() => navigate("/profile")}>
+            Profile
+          </button>
         </div>
       </div>
 
@@ -100,10 +135,21 @@ export default function EmployerDashboard() {
 
         {tenders.length === 0 ? (
           <div style={{ textAlign: "center", padding: "3rem" }}>
-            <p style={{ color: "var(--color-text-muted)", marginBottom: "1rem" }}>No tenders yet.</p>
+            <p style={{ color: "var(--color-text-muted)", marginBottom: "1rem" }}>
+              No tenders yet.
+            </p>
+
             <button
               onClick={() => navigate("/employer/create-tender")}
-              style={{ padding: "0.75rem 1.5rem", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: "var(--radius)", fontWeight: 600, cursor: "pointer" }}
+              style={{
+                padding: "0.75rem 1.5rem",
+                background: "var(--color-primary)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "var(--radius)",
+                fontWeight: 600,
+                cursor: "pointer"
+              }}
             >
               Create your first tender
             </button>
@@ -120,19 +166,28 @@ export default function EmployerDashboard() {
                 <th>Actions</th>
               </tr>
             </thead>
+
             <tbody>
               {tenders.map((t) => {
                 const count = bidCounts[t.id] || 0
                 const canAward = t.status === "OPEN" && count > 0
+
                 return (
                   <tr key={t.id}>
                     <td style={{ fontWeight: 600 }}>{t.title}</td>
                     <td style={{ color: "var(--color-text-muted)" }}>{t.category}</td>
-                    <td style={{ fontWeight: 600 }}>KES {Number(t.budget).toLocaleString()}</td>
+                    <td style={{ fontWeight: 600 }}>
+                      KES {Number(t.budget).toLocaleString()}
+                    </td>
                     <td>
                       <span style={{
                         fontWeight: 700,
-                        color: count >= 10 ? "var(--color-danger)" : count > 0 ? "var(--color-primary)" : "var(--color-text-muted)"
+                        color:
+                          count >= 10
+                            ? "var(--color-danger)"
+                            : count > 0
+                              ? "var(--color-primary)"
+                              : "var(--color-text-muted)"
                       }}>
                         {count} / 10
                       </span>
@@ -142,24 +197,15 @@ export default function EmployerDashboard() {
                       <div style={{ display: "flex", gap: "0.4rem" }}>
                         <button
                           onClick={() => navigate(`/employer/tenders/${t.id}/bids`)}
-                          style={{ padding: "5px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)", background: "var(--color-surface-hover)", color: "var(--color-text)", fontWeight: 600, cursor: "pointer", fontSize: "0.8rem" }}
                         >
                           View Bids
                         </button>
+
                         <button
-                          onClick={() => canAward && navigate(`/employer/award/${t.id}`)}
+                          onClick={() =>
+                            canAward && navigate(`/employer/award/${t.id}`)
+                          }
                           disabled={!canAward}
-                          style={{
-                            padding: "5px 12px",
-                            borderRadius: "var(--radius-sm)",
-                            border: `1px solid ${canAward ? "var(--color-primary-light)" : "var(--color-border)"}`,
-                            background: canAward ? "var(--color-primary-subtle)" : "var(--color-surface-hover)",
-                            color: canAward ? "var(--color-primary)" : "var(--color-text-muted)",
-                            fontWeight: 600,
-                            cursor: canAward ? "pointer" : "not-allowed",
-                            fontSize: "0.8rem",
-                            opacity: canAward ? 1 : 0.6,
-                          }}
                         >
                           {count === 0 ? "No bids yet" : "Award Now →"}
                         </button>
@@ -169,6 +215,7 @@ export default function EmployerDashboard() {
                 )
               })}
             </tbody>
+
           </table>
         )}
       </div>

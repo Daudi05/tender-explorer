@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { useParams, Link } from "react-router-dom"
 import { apiFetch } from "../../api/client"
 import { formatKES } from "../../utils/formatters"
-
+import { useNavigate } from "react-router-dom"
 export default function TenderDetail() {
   const { id } = useParams()
 

@@ -23,6 +23,7 @@
   cards on other pages. It's a deliberate departure from the standard card style.
 */
 import { useState, useEffect } from 'react'
+import { useNavigate } from "react-router-dom"
 import { apiFetch } from '../../api/client'
 import { downloadFile } from '../../utils/fileHelpers'
 // Note: no raw fetch() or localStorage access — apiFetch handles auth for blobs too.

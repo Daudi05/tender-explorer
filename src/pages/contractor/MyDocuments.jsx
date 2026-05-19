@@ -23,6 +23,7 @@
   new document appear in the list. Navigation would lose that context.
 */
 import { useState, useEffect } from 'react'
+import { useNavigate } from "react-router-dom"
 import { apiFetch } from '../../api/client'
 import { downloadFile } from '../../utils/fileHelpers'
 // Note: no longer importing BASE_URL or touching localStorage for downloads.

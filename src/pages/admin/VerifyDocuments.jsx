@@ -33,6 +33,7 @@ import Skeleton from '../../components/ui/Skeleton'
 import EmptyState from '../../components/ui/EmptyState'
 import { useToast } from '../../components/ui/useToast'
 import './VerifyDocuments.css'
+import { useNavigate } from "react-router-dom"
 
 const FILTER_TABS = ['pending', 'verified', 'rejected', 'all']
 
@@ -131,6 +132,18 @@ export default function VerifyDocuments() {
       : documents.filter((d) => d.verification_status === tab).length
     return acc
   }, {})
+
+
+
+
+
+   
+
+
+
+
+
+
 
   return (
     <div className="verify-docs-page">

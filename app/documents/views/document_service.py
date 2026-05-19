@@ -117,7 +117,28 @@ class DocumentService:
 
     @staticmethod
     def list_mine(uploader_id):
-        return DocumentRepository.list_by_uploader(uploader_id)
+
+        from app.auth.models.user import User
+        from app.documents.models.document import Document
+
+        user = User.query.get(uploader_id)
+
+        if not user:
+            return []
+
+        # ================= ADMIN =================
+        # Admin sees ALL uploaded documents
+        if user.role == "ADMIN":
+
+            return Document.query.order_by(
+                Document.created_at.desc()
+            ).all()
+
+        # ================= NORMAL USERS =================
+        # Contractors/employers only see their own docs
+        return DocumentRepository.list_by_uploader(
+            uploader_id
+        )
 
     @staticmethod
     def delete(doc, requester_id):

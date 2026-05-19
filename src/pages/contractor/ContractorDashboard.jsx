@@ -36,6 +36,23 @@ export default function ContractorDashboard() {
 
   return (
     <div className="dashboard-page">
+
+      {/* BACK BUTTON */}
+      <button
+        onClick={() => navigate(-1)}
+        style={{
+          marginBottom: "1rem",
+          padding: "0.6rem 1rem",
+          borderRadius: "10px",
+          border: "1px solid var(--color-border)",
+          background: "white",
+          cursor: "pointer",
+          fontWeight: 600,
+        }}
+      >
+        ← Back
+      </button>
+
       {/* Inner nav */}
       <div className="employer-navbar">
         <span style={{ fontWeight: 800, fontSize: "1rem", color: "white" }}>Contractor Panel</span>

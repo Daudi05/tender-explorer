@@ -55,6 +55,23 @@ export default function MyTenders() {
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
+
+      {/* BACK BUTTON */}
+      <button
+        onClick={() => navigate(-1)}
+        style={{
+          marginBottom: '1rem',
+          padding: '0.6rem 1rem',
+          borderRadius: '8px',
+          border: '1px solid #d1d5db',
+          background: '#ffffff',
+          cursor: 'pointer',
+          fontWeight: 600,
+        }}
+      >
+        ← Back
+      </button>
+
       <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <h1>My Tenders</h1>
