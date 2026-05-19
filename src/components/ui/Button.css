@@ -27,11 +27,11 @@
 .ui-btn--ghost { background: transparent; color: var(--color-text-secondary); border: 1px solid var(--color-border); }
 .ui-btn--ghost:hover:not(:disabled) { background: var(--color-surface-hover); }
 
-.ui-btn--secondary { background: #f5f3ff; color: #7c3aed; border: 1px solid #c4b5fd; }
-.ui-btn--secondary:hover:not(:disabled) { background: #ede9fe; }
+.ui-btn--secondary { background: var(--color-primary-subtle); color: var(--color-primary); border: 1px solid var(--color-primary-light); }
+.ui-btn--secondary:hover:not(:disabled) { background: var(--color-primary-light); }
 
-.ui-btn--outline { background: transparent; color: var(--color-text); border: 1.5px solid #e5e7eb; }
-.ui-btn--outline:hover:not(:disabled) { background: #f9fafb; border-color: #c4b5fd; color: #7c3aed; }
+.ui-btn--outline { background: transparent; color: var(--color-text); border: 1.5px solid var(--color-border); }
+.ui-btn--outline:hover:not(:disabled) { background: var(--color-surface-hover); border-color: var(--color-primary-light); color: var(--color-primary); }
 
 .ui-btn-spinner {
   display: inline-block;

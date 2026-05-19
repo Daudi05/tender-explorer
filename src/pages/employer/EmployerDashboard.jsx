@@ -5,9 +5,9 @@ import { apiFetch } from "../../api/client"
 import { useAuth } from "../../context/AuthContext"
 
 const STATUS_STYLES = {
-  OPEN:    { bg: '#ecfdf5', color: '#065f46', border: '#a7f3d0' },
+  OPEN:    { bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
   AWARDED: { bg: '#eff6ff', color: '#1e40af', border: '#bfdbfe' },
-  CLOSED:  { bg: '#f3f4f6', color: '#374151', border: '#d1d5db' },
+  CLOSED:  { bg: '#f5f5f4', color: '#57534e', border: '#d6d3d1' },
 }
 
 function StatusBadge({ status }) {
@@ -23,27 +23,47 @@ export default function EmployerDashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [tenders, setTenders] = useState([])
+  const [bidCounts, setBidCounts] = useState({}) // tender_id → count
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    apiFetch("/tenders/me")
-      .then((data) => setTenders(data.tenders || []))
-      .catch(() => setError("Failed to load tenders"))
-      .finally(() => setLoading(false))
+    async function load() {
+      try {
+        const [tenderData, bidData] = await Promise.all([
+          apiFetch("/tenders/me"),
+          apiFetch("/bids/employer/all"),
+        ])
+        const tenderList = tenderData.tenders || []
+        setTenders(tenderList)
+
+        // Build bid count map: tender_id → number of bids
+        const bids = bidData.bids || []
+        const counts = {}
+        bids.forEach((b) => {
+          counts[b.tender_id] = (counts[b.tender_id] || 0) + 1
+        })
+        setBidCounts(counts)
+      } catch {
+        setError("Failed to load dashboard")
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [])
 
   const open = tenders.filter((t) => t.status === "OPEN").length
   const awarded = tenders.filter((t) => t.status === "AWARDED").length
 
   if (loading) return <div className="stub-page"><p>Loading dashboard…</p></div>
-  if (error) return <div className="stub-page"><p style={{ color: "#ef4444" }}>{error}</p></div>
+  if (error) return <div className="stub-page"><p style={{ color: "var(--color-danger)" }}>{error}</p></div>
 
   return (
     <div className="dashboard-page">
       {/* Inner nav */}
       <div className="employer-navbar">
-        <span style={{ fontWeight: 800, fontSize: "1rem", color: "white" }}>Employer Panel</span>
+        <span style={{ fontWeight: 700, fontSize: "1rem", color: "white" }}>Employer Panel</span>
         <div className="nav-links">
           <button onClick={() => navigate("/employer/create-tender")}>+ Create Tender</button>
           <button onClick={() => navigate("/employer/my-tenders")}>My Tenders</button>
@@ -69,6 +89,10 @@ export default function EmployerDashboard() {
           <h3>Awarded</h3>
           <h1>{awarded}</h1>
         </div>
+        <div className="dashboard-card">
+          <h3>Total Bids Received</h3>
+          <h1>{Object.values(bidCounts).reduce((a, b) => a + b, 0)}</h1>
+        </div>
       </div>
 
       <div className="dashboard-section">
@@ -76,10 +100,10 @@ export default function EmployerDashboard() {
 
         {tenders.length === 0 ? (
           <div style={{ textAlign: "center", padding: "3rem" }}>
-            <p style={{ color: "#9ca3af", marginBottom: "1rem" }}>No tenders yet.</p>
+            <p style={{ color: "var(--color-text-muted)", marginBottom: "1rem" }}>No tenders yet.</p>
             <button
               onClick={() => navigate("/employer/create-tender")}
-              style={{ padding: "0.75rem 1.5rem", background: "linear-gradient(135deg,#7c3aed,#2563eb)", color: "#fff", border: "none", borderRadius: 12, fontWeight: 600, cursor: "pointer" }}
+              style={{ padding: "0.75rem 1.5rem", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: "var(--radius)", fontWeight: 600, cursor: "pointer" }}
             >
               Create your first tender
             </button>
@@ -91,35 +115,59 @@ export default function EmployerDashboard() {
                 <th>Title</th>
                 <th>Category</th>
                 <th>Budget</th>
+                <th>Bids</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {tenders.map((t) => (
-                <tr key={t.id}>
-                  <td style={{ fontWeight: 600 }}>{t.title}</td>
-                  <td style={{ color: "#6b7280" }}>{t.category}</td>
-                  <td style={{ fontWeight: 600 }}>KES {Number(t.budget).toLocaleString()}</td>
-                  <td><StatusBadge status={t.status} /></td>
-                  <td>
-                    <div style={{ display: "flex", gap: "0.4rem" }}>
-                      <button
-                        onClick={() => navigate(`/employer/tenders/${t.id}/bids`)}
-                        style={{ padding: "5px 12px", borderRadius: 8, border: "1px solid #c4b5fd", background: "#f5f3ff", color: "#7c3aed", fontWeight: 600, cursor: "pointer", fontSize: "0.8rem" }}
-                      >
-                        View Bids
-                      </button>
-                      <button
-                        onClick={() => navigate(`/employer/award/${t.id}`)}
-                        style={{ padding: "5px 12px", borderRadius: 8, border: "1px solid #bfdbfe", background: "#eff6ff", color: "#1d4ed8", fontWeight: 600, cursor: "pointer", fontSize: "0.8rem" }}
-                      >
-                        Award
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {tenders.map((t) => {
+                const count = bidCounts[t.id] || 0
+                const canAward = t.status === "OPEN" && count > 0
+                return (
+                  <tr key={t.id}>
+                    <td style={{ fontWeight: 600 }}>{t.title}</td>
+                    <td style={{ color: "var(--color-text-muted)" }}>{t.category}</td>
+                    <td style={{ fontWeight: 600 }}>KES {Number(t.budget).toLocaleString()}</td>
+                    <td>
+                      <span style={{
+                        fontWeight: 700,
+                        color: count >= 10 ? "var(--color-danger)" : count > 0 ? "var(--color-primary)" : "var(--color-text-muted)"
+                      }}>
+                        {count} / 10
+                      </span>
+                    </td>
+                    <td><StatusBadge status={t.status} /></td>
+                    <td>
+                      <div style={{ display: "flex", gap: "0.4rem" }}>
+                        <button
+                          onClick={() => navigate(`/employer/tenders/${t.id}/bids`)}
+                          style={{ padding: "5px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)", background: "var(--color-surface-hover)", color: "var(--color-text)", fontWeight: 600, cursor: "pointer", fontSize: "0.8rem" }}
+                        >
+                          View Bids
+                        </button>
+                        <button
+                          onClick={() => canAward && navigate(`/employer/award/${t.id}`)}
+                          disabled={!canAward}
+                          style={{
+                            padding: "5px 12px",
+                            borderRadius: "var(--radius-sm)",
+                            border: `1px solid ${canAward ? "var(--color-primary-light)" : "var(--color-border)"}`,
+                            background: canAward ? "var(--color-primary-subtle)" : "var(--color-surface-hover)",
+                            color: canAward ? "var(--color-primary)" : "var(--color-text-muted)",
+                            fontWeight: 600,
+                            cursor: canAward ? "pointer" : "not-allowed",
+                            fontSize: "0.8rem",
+                            opacity: canAward ? 1 : 0.6,
+                          }}
+                        >
+                          {count === 0 ? "No bids yet" : "Award Now →"}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         )}
