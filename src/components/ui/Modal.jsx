@@ -17,6 +17,14 @@ export const Modal = ({
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const sizes = {
@@ -33,7 +41,7 @@ export const Modal = ({
         <div className={`relative w-full ${sizes[size]} rounded-lg bg-white shadow-xl transform transition-all duration-300 flex flex-col max-h-[90vh]`}>
           <div className="flex items-center justify-between border-b p-4">
             <h3 className="text-lg font-bold text-gray-900">{title}</h3>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 focus:outline-none">
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 focus:outline-none" aria-label="Close dialog">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -52,3 +60,5 @@ export const Modal = ({
     </div>
   );
 };
+
+export default Modal;

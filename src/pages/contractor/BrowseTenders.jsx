@@ -1,7 +1,7 @@
 import '../stub.css'
 
 import { useEffect, useState } from 'react';
-import apiFetch from '../../api/client';
+import {apiFetch} from '../../api/client';
 import TenderCard from '../../components/TenderCard';
 
 export default function BrowseTenders() {

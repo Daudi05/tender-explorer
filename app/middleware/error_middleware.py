@@ -5,7 +5,6 @@ from sqlalchemy.exc import IntegrityError
 
 
 def register_error_handlers(app):
-
     @app.errorhandler(400)
     def bad_request(error):
         return jsonify({

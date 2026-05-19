@@ -1,12 +1,23 @@
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Navigate, Outlet } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
 
-export default function RoleGuard({ role, children }) {
-  const { user } = useAuth();
+export default function RoleGuard({ role }) {
+  const { user, isAuthenticated, loading } = useAuth()
 
-  if (!user || user.role !== role) {
-    return <Navigate to="/unauthorized" replace />;
+  if (loading) {
+    return <p>Loading...</p>
   }
 
-  return children;
+  // User not logged in
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+
+  // Wrong role
+  if (user?.role !== role) {
+    return <Navigate to="/unauthorized" replace />
+  }
+
+  // Correct role
+  return <Outlet />
 }

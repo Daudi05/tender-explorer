@@ -3,7 +3,9 @@ import React from 'react';
 export const EmptyState = ({
   title = 'No data available',
   description = 'There are no records to display at this moment.',
+  message,
   actionButton,
+  action,
   className = ''
 }) => {
   return (
@@ -14,8 +16,10 @@ export const EmptyState = ({
         </svg>
       </div>
       <h3 className="text-md font-bold text-gray-900 mb-1">{title}</h3>
-      <p className="text-sm text-gray-500 mb-4 max-w-xs">{description}</p>
-      {actionButton && <div>{actionButton}</div>}
+      <p className="text-sm text-gray-500 mb-4 max-w-xs">{message || description}</p>
+      {(actionButton || action) && <div>{actionButton || action}</div>}
     </div>
   );
 };
+
+export default EmptyState;
