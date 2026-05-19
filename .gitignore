@@ -1,20 +1,42 @@
-venv/
-__pycache__/
-*.pyc
-instance/
+# Frontend
+node_modules
+dist
+.env.local
+
 # Python virtual environment
 venv/
+env/
+.venv/
 
-# Python compiled files
+# Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# SQLite database (each developer has their own)
+# Database
 *.db
+*.sqlite
+*.sqlite3
 
-# Uploaded files (user uploads, don't push to GitHub)
+# Uploads — keep folder structure, ignore actual files
 uploads/*
 !uploads/.gitkeep
 
-# Secret/environment files
+# Flask instance
+instance/
+
+# Secrets
 .env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Nested clones
+tender-explorer/

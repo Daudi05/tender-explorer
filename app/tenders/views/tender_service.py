@@ -1,179 +1,59 @@
-import random
-import string
-from flask import request
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import get_jwt_identity
-
+from datetime import datetime
 from app.tenders.models.tender_repo import TenderRepository
+from app.extensions import db
 
-from app.tenders.views.tender_schema import (
-    single_tender_schema,
-    multiple_tender_schema
-)
 
 class TenderService:
+    @staticmethod
+    def create(data, employer_id):
+        return TenderRepository.create({**data, "employer_id": employer_id, "status": "OPEN"})
 
     @staticmethod
-    def generate_tender_code():
-
-        letters = ''.join(
-            random.choices(string.ascii_uppercase, k=2)
-        )
-
-        numbers = ''.join(
-            random.choices(string.digits, k=4)
-        )
-
-        return f'{letters}{numbers}'
+    def get(tender_id):
+        return TenderRepository.get_by_id(tender_id)
 
     @staticmethod
-    @jwt_required()
-    def create_tender():
-
-        data = request.get_json()
-
-        errors = single_tender_schema.validate(data)
-
-        if errors:
-            return {
-                'errors': errors
-            }, 400
-
-        data['tender_code'] = TenderService.generate_tender_code()
-
-        data['employer_id'] = get_jwt_identity()
-
-        tender = TenderRepository.create_tender(data)
-
-        return {
-            'message': 'Tender successfully created',
-            'tender': single_tender_schema.dump(tender)
-        }, 201
-    
-    @staticmethod
-    def get_all_tenders():
-
-        page = request.args.get(
-            'page',
-            1,
-            type=int
-        )
-
-        per_page = request.args.get(
-            'per_page',
-            10,
-            type=int
-        )
-
-        category = request.args.get('category')
-
-        tenders = TenderRepository.get_all_tenders(
-            page,
-            per_page,
-            category
-        )
-
-        return {
-            'current_page': tenders.page,
-            'total_pages': tenders.pages,
-            'total_tenders': tenders.total,
-            'data': multiple_tender_schema.dump(
-                tenders.items
-            )
-        }, 200
+    def list_all():
+        return TenderRepository.list_all()
 
     @staticmethod
-    def get_single_tender(uuid):
+    def list_active():
+        return TenderRepository.list_active()
 
-        tender = TenderRepository.get_tender_by_uuid(uuid)
-
-        if not tender:
-            return {
-                'error': 'Tender not found'
-            }, 404
-
-        return {
-            'tender': single_tender_schema.dump(tender)
-        }, 200
-    
     @staticmethod
-    @jwt_required()
-    def update_tender(uuid):
+    def list_by_employer(employer_id):
+        return TenderRepository.list_by_employer(employer_id)
 
-        tender = TenderRepository.get_tender_by_uuid(uuid)
-
-        if not tender:
-            return {
-                'error': 'Tender not found'
-            }, 404
-
-        data = request.get_json()
-
-        errors = single_tender_schema.validate(
-            data,
-            partial=True
-        )
-
-        if errors:
-            return {
-                'errors': errors
-            }, 400
-
-        tender.title = data.get(
-            'title',
-            tender.title
-        )
-
-        tender.category = data.get(
-            'category',
-            tender.category
-        )
-
-        tender.company_name = data.get(
-            'company_name',
-            tender.company_name
-        )
-
-        tender.description = data.get(
-            'description',
-            tender.description
-        )
-
-        tender.budget = data.get(
-            'budget',
-            tender.budget
-        )
-        tender.completion_time = data.get(
-            'completion_time',
-            tender.completion_time
-        )
-
-        tender.image_url = data.get(
-            'image_url',
-            tender.image_url
-        )
-
-        updated_tender = TenderRepository.update_tender(tender)
-
-        return {
-            'message': 'Tender updated successfully',
-            'tender': single_tender_schema.dump(
-                updated_tender
-            )
-        }, 200
     @staticmethod
-    @jwt_required()
-    def delete_tender(uuid):
+    def search(**kwargs):
+        return TenderRepository.search(**kwargs)
 
-        tender = TenderRepository.get_tender_by_uuid(uuid)
+    @staticmethod
+    def update(tender, data, requester_id):
+        from app.bids.models.bid import Bid
+        if tender.employer_id != requester_id:
+            raise PermissionError("Only the owner can update this tender")
+        winning_bid_id = data.pop("winning_bid_id", None)
+        for k, v in data.items():
+            setattr(tender, k, v)
+        if winning_bid_id:
+            tender.winning_bid_id = winning_bid_id
+            tender.status = "AWARDED"
+            tender.awarded_at = datetime.utcnow()
+            bids = Bid.query.filter_by(tender_id=tender.id).all()
+            for b in bids:
+                b.status = "AWARDED" if b.id == winning_bid_id else "REJECTED"
+                if b.id == winning_bid_id:
+                    b.is_winner = True
+            db.session.commit()
+        return TenderRepository.update(tender)
 
-        if not tender:
-            return {
-                'error': 'Tender not found'
-            }, 404
+    @staticmethod
+    def delete(tender, requester_id):
+        if tender.employer_id != requester_id:
+            raise PermissionError("Only the owner can delete this tender")
+        TenderRepository.delete(tender)
 
-        TenderRepository.delete_tender(tender)
-
-        return {
-            'message': 'Tender successfully deleted'
-        }, 200
+    @staticmethod
+    def is_deadline_passed(tender):
+        return datetime.utcnow() > tender.deadline

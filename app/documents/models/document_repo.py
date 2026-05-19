@@ -1,7 +1,8 @@
-# This file is the "Repository". Its only job is to talk to the database.
-# It does NOT validate files, check permissions, or talk to users.
-# It just saves rows, finds rows, and deletes rows.
-
+# ============================================================
+# Document REPOSITORY — talks ONLY to the database.
+# No business logic, no HTTP, no file I/O — pure CRUD.
+# The service layer calls this; this layer calls SQLAlchemy.
+# ============================================================
 from app.extensions import db
 from app.documents.models.document import Document
 
@@ -10,27 +11,29 @@ class DocumentRepository:
 
     @staticmethod
     def create(data):
-        # Make a new Document object using the dictionary we got
-        doc = Document(**data)
-        # Tell the database "remember this new row"
-        db.session.add(doc)
-        # Save it for real (write to disk)
-        db.session.commit()
+        # Build a Document object from the dict the service passed in
+        doc = Document(**data)  # ** unpacks the dict into keyword args
+        db.session.add(doc)     # tell SQLAlchemy "track this new row"
+        db.session.commit()     # actually write it to disk (INSERT INTO documents...)
         return doc
 
     @staticmethod
     def get_by_id(doc_id):
-        # Find one document by its unique ID. Returns None if not found.
+        # SQLAlchemy 2.x style — fastest possible PK lookup.
+        # Returns None if not found (doesn't raise).
         return db.session.get(Document, doc_id)
 
     @staticmethod
     def list_by_uploader(uploader_id):
-        # Find ALL documents uploaded by one user.
-        # Sorted newest-first (most recent at the top).
-        return Document.query.filter_by(uploader_id=uploader_id).order_by(Document.created_at.desc()).all()
+        # Build a query: WHERE uploader_id = ? ORDER BY created_at DESC
+        # The index on uploader_id makes this sub-millisecond.
+        return (Document.query
+                .filter_by(uploader_id=uploader_id)
+                .order_by(Document.created_at.desc())  # newest first
+                .all())
 
     @staticmethod
     def delete(doc):
-        # Remove the row from the database
+        # SQLAlchemy translates this to: DELETE FROM documents WHERE id = ?
         db.session.delete(doc)
         db.session.commit()
