@@ -30,8 +30,8 @@ export default function TenderCard({ tender }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
         <span style={{
           fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em",
-          color: "#7c3aed", background: "rgba(124,58,237,0.1)", padding: "2px 10px",
-          borderRadius: 9999, border: "1px solid rgba(124,58,237,0.2)",
+          color: "var(--color-primary)", background: "var(--color-primary-subtle)", padding: "2px 10px",
+          borderRadius: 9999, border: "1px solid var(--color-primary-light)",
         }}>
           {tender.category || "General"}
         </span>
@@ -55,11 +55,11 @@ export default function TenderCard({ tender }) {
 
       <div style={{
         display: "flex", justifyContent: "space-between", alignItems: "center",
-        paddingTop: "0.75rem", borderTop: "1px solid #f3f0ff",
+        paddingTop: "0.75rem", borderTop: "1px solid var(--color-border)",
       }}>
         <div>
           <div style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Budget</div>
-          <div style={{ fontSize: "1rem", fontWeight: 700, color: "#0f0a1e" }}>KES {budget}</div>
+          <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--color-text)" }}>KES {budget}</div>
         </div>
         <div style={{ textAlign: "right" }}>
           <div style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Deadline</div>
@@ -70,7 +70,7 @@ export default function TenderCard({ tender }) {
       {user?.role === "CONTRACTOR" && status === "OPEN" && (
         <div style={{
           marginTop: "1rem", padding: "0.55rem",
-          background: "linear-gradient(135deg, #7c3aed, #2563eb)",
+          background: "var(--color-primary)",
           color: "white", borderRadius: 10, textAlign: "center",
           fontSize: "0.875rem", fontWeight: 600,
         }}>
