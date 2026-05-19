@@ -1,0 +1,20 @@
+.notification-item { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); cursor: pointer; transition: background-color var(--transition); background: transparent; color: var(--color-text-secondary); }
+.notification-item:last-child { border-bottom: none; }
+.notification-item:hover { background-color: var(--color-surface-hover); }
+.notification-item:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--color-primary); }
+.notification-item-unread { background-color: var(--color-primary-light); color: var(--color-text); font-weight: var(--font-weight-semibold); }
+.notification-item-icon { flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding-top: 2px; }
+.notification-item-content { flex: 1; min-width: 0; }
+.notification-item-message { font-size: var(--font-size-sm); line-height: 1.4; word-wrap: break-word; }
+.notification-item-time { margin-top: var(--space-1); font-size: var(--font-size-xs); color: var(--color-text-muted); font-weight: var(--font-weight-medium); }
+.notification-item-actions { flex-shrink: 0; display: flex; align-items: center; justify-content: center; min-width: 32px; }
+.notification-item-dot { display: inline-flex; }
+.notification-item-mark-read { background: transparent; border: none; padding: var(--space-2); border-radius: var(--radius-full); color: var(--color-text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color var(--transition), color var(--transition); }
+.notification-item-mark-read:hover { background-color: var(--color-surface-hover); color: var(--color-primary); }
+.notification-item-award { border-left: 3px solid var(--color-success); background: linear-gradient(90deg, var(--color-success-bg) 0%, var(--color-primary-light) 100%); font-size: var(--font-size-base); }
+.notification-item-award .notification-item-message { font-size: var(--font-size-base); }
+@keyframes notificationFadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.notification-item-animate { animation: notificationFadeInUp 200ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .notification-item-animate { animation: none; } .notification-item { transition: none; } }
+.notification-item-compact { padding: var(--space-2) var(--space-3); }
+.notification-item-compact .notification-item-message { font-size: var(--font-size-sm); }

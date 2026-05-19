@@ -1,48 +1,39 @@
-import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import './Navbar.css';
+import { NavLink, useNavigate } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
+import "./Navbar.css"
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
 
   return (
     <nav className="navbar">
-      <Link to="/" className="logo">
-        Tender Explorer
-      </Link>
-
-      <div className="nav-links">
-
-        {user?.role === 'EMPLOYER' && (
-          <>
-            <Link to="/employer/dashboard">Dashboard</Link>
-            <Link to="/employer/my-tenders">My Tenders</Link>
-            <Link to="/employer/create-tender">Create Tender</Link>
-          </>
-        )}
-
-        {user?.role === 'CONTRACTOR' && (
-          <>
-            <Link to="/contractor/dashboard">Dashboard</Link>
-            <Link to="/contractor/browse">Browse</Link>
-            <Link to="/contractor/my-bids">My Bids</Link>
-          </>
-        )}
-
+      <div className="logo" onClick={() => navigate("/")}>
+        TenderExplorer
       </div>
 
-      <div className="nav-right">
-        {user ? (
-          <button onClick={logout}>
-            Logout
-          </button>
-        ) : (
+      <div className="nav-links">
+        <NavLink to="/" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
+          Home
+        </NavLink>
+
+        {!user && (
           <>
-            <Link to="/login">Login</Link>
-            <Link to="/register">Register</Link>
+            <NavLink to="/login" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
+              Log in
+            </NavLink>
+            <NavLink to="/register" className="nav-link nav-cta">
+              Get started
+            </NavLink>
           </>
+        )}
+
+        {user && (
+          <button className="logout" onClick={logout}>
+            Log out
+          </button>
         )}
       </div>
     </nav>
-  );
+  )
 }
