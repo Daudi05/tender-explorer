@@ -49,8 +49,8 @@ export default function Register() {
 
       alert("Account created successfully");
 
-      if (data.token) {
-        localStorage.setItem("token", data.token);
+      if (data.verification_token) {
+        localStorage.setItem("verification_token", data.verification_token);
       }
 
       navigate("/login");

@@ -29,11 +29,8 @@ class BidEvaluationService:
             bid.bid_amount for bid in bids
         )
 
-        fastest_time = min(
-            bid.completion_months
-            for bid in bids
-            if bid.completion_months
-        )
+        timed_bids = [b for b in bids if b.completion_months]
+        fastest_time = min(b.completion_months for b in timed_bids) if timed_bids else None
 
         highest_score = 0
         winning_bid = None
@@ -52,14 +49,15 @@ class BidEvaluationService:
                 contractor.reputation_score / 100
             ) * 30
 
-            # COMPLETION TIME SCORE
+            # COMPLETION TIME SCORE (skip if no bids have completion_months)
             time_score = (
-                fastest_time / bid.completion_months
-            ) * 20
+                (fastest_time / bid.completion_months) * 20
+                if fastest_time and bid.completion_months else 0
+            )
 
-            # FRAUD PENALTY
+            # FRAUD PENALTY (score is 0–100 scale)
             fraud_penalty = (
-                bid.fraud_score * 10
+                bid.fraud_score / 10
             )
 
             # FINAL SCORE
@@ -75,8 +73,8 @@ class BidEvaluationService:
                 2
             )
 
-            # AUTO FLAG FRAUD
-            if bid.fraud_score >= 0.7:
+            # AUTO FLAG FRAUD (score is 0–100 scale, flag at 60+)
+            if bid.fraud_score >= 60:
                 bid.is_flagged = True
 
             # SELECT WINNER

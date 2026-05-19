@@ -44,6 +44,15 @@ def list_my_documents():
     return jsonify({"documents": documents_response_schema.dump(docs)}), 200
 
 
+@documents_bp.route("/all", methods=["GET"])
+@jwt_required()
+@role_required("ADMIN")
+def list_all_documents():
+    from app.documents.models.document import Document
+    docs = Document.query.order_by(Document.uploaded_at.desc()).all()
+    return jsonify({"documents": documents_response_schema.dump(docs)}), 200
+
+
 @documents_bp.route("/<string:doc_id>", methods=["GET"])
 @jwt_required()
 def get_document(doc_id):

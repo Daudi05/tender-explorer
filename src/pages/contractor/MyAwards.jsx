@@ -73,7 +73,7 @@ export default function MyAwards() {
       const combined = winningBids
         .map((bid, i) => ({ bid, result: results[i] }))
         .filter(({ result }) => result.status === 'fulfilled')
-        .map(({ bid, result }) => ({ bid, tender: result.value }))
+        .map(({ bid, result }) => ({ bid, tender: result.value?.tender || result.value }))
 
       setAwards(combined)
     } catch (err) {

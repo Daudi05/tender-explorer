@@ -64,8 +64,7 @@ export default function VerifyDocuments() {
     setLoading(true)
     setFetchError(null)
     try {
-      // Admin endpoint returns all documents, not just the logged-in user's
-      const data = await apiFetch('/documents/me') // backend returns all for admin role
+      const data = await apiFetch('/documents/all')
       setDocuments(Array.isArray(data) ? data : data.documents ?? [])
     } catch (err) {
       setFetchError(err.message || 'Failed to load documents')

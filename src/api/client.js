@@ -29,7 +29,8 @@ export async function apiFetch(path, options = {}) {
   // Strip our custom option before passing to fetch — fetch doesn't know about responseType
   const { responseType, ...fetchOptions } = options
 
-  const response = await fetch(`${BASE_URL}${path}`, {
+  const fullPath = path.startsWith('/api') ? path : `/api${path}`
+  const response = await fetch(`${BASE_URL}${fullPath}`, {
     ...fetchOptions,
     headers,
   })
