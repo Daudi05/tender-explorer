@@ -1,4 +1,4 @@
-import '../stub.css'
+import "../stub.css"
 
 import { useState } from "react"
 import axios from "axios"
@@ -36,6 +36,15 @@ export default function CreateTender() {
       )
 
       alert("Tender created successfully")
+
+      setForm({
+        title: "",
+        description: "",
+        category: "",
+        budget: "",
+        deadline: ""
+      })
+
     } catch (err) {
       console.log(err.response?.data)
       alert("Failed to create tender")
@@ -43,45 +52,72 @@ export default function CreateTender() {
   }
 
   return (
-    <div>
-      <h1>Create Tender</h1>
+    <div className="create-tender-container">
 
-      <form onSubmit={handleSubmit}>
+      {/* HEADER */}
+      <div className="create-tender-header">
+        <h1>Create Tender</h1>
+        <p>Fill in the details below to publish a new tender</p>
+      </div>
+
+      {/* FORM */}
+      <form className="create-tender-form" onSubmit={handleSubmit}>
+
+        <label>Title</label>
         <input
           name="title"
-          placeholder="Title"
+          placeholder="Enter tender title"
+          value={form.title}
           onChange={handleChange}
         />
 
+        <label>Description</label>
         <textarea
           name="description"
-          placeholder="Description"
+          placeholder="Describe the project requirements"
+          value={form.description}
           onChange={handleChange}
         />
 
+        <label>Category</label>
         <input
           name="category"
-          placeholder="Category"
+          placeholder="e.g Construction, IT, Supplies"
+          value={form.category}
           onChange={handleChange}
         />
 
-        <input
-          name="budget"
-          type="number"
-          placeholder="Budget"
-          onChange={handleChange}
-        />
+        <div className="form-row">
 
-        <input
-          name="deadline"
-          type="datetime-local"
-          onChange={handleChange}
-        />
+          <div>
+            <label>Budget (KES)</label>
+            <input
+              name="budget"
+              type="number"
+              placeholder="Enter budget"
+              value={form.budget}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div>
+            <label>Deadline</label>
+            <input
+              name="deadline"
+              type="datetime-local"
+              value={form.deadline}
+              onChange={handleChange}
+            />
+          </div>
+
+        </div>
 
         <button type="submit">
           Create Tender
         </button>
+
       </form>
+
     </div>
   )
 }

@@ -14,46 +14,69 @@ export default function EmployerDashboard() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    const fetchTenders = async () => {
-      try {
-        setLoading(true)
+  async function fetchEmployerTenders() {
+    try {
+      setLoading(true)
 
-        const data = await apiFetch("/api/tenders/me")
+      const data = await apiFetch("/api/tenders/me")
 
-        setTenders(data?.tenders || [])
-      } catch (err) {
-        console.log("Error loading tenders:", err)
-        setError("Failed to load tenders")
-      } finally {
-        setLoading(false)
-      }
+      console.log("Employer tenders:", data)
+
+      // ✅ FIX: extract array properly
+      setTenders(data.tenders || [])
+    } catch (err) {
+      console.error("Dashboard Error:", err)
+      setError("Failed to load employer tenders")
+    } finally {
+      setLoading(false)
     }
+  }
 
-    fetchTenders()
-  }, [])
+  fetchEmployerTenders()
+}, [])
+  if (loading) {
+    return (
+      <div className="dashboard-container">
+        <p>Loading dashboard...</p>
+      </div>
+    )
+  }
 
-  if (loading) return <p>Loading dashboard...</p>
-  if (error) return <p style={{ color: "red" }}>{error}</p>
+  if (error) {
+    return (
+      <div className="dashboard-container">
+        <p style={{ color: "red" }}>{error}</p>
+      </div>
+    )
+  }
 
   return (
     <div className="dashboard-container">
 
-      {/* ================= EMPLOYER NAVBAR (NEW ADDITION) ================= */}
+      {/* ================= NAVBAR ================= */}
       <div className="employer-navbar">
 
-        <h2 className="logo">Employer Panel</h2>
+        <div>
+          <h2 className="logo">Employer Panel</h2>
+        </div>
 
         <div className="nav-links">
 
-          <button onClick={() => navigate("/employer/dashboard")}>
+          <button
+            onClick={() => navigate("/employer/dashboard")}
+          >
             Dashboard
           </button>
 
-          <button onClick={() => navigate("/employer/create-tender")}>
+          <button
+            onClick={() => navigate("/employer/create-tender")}
+          >
             + Create Tender
           </button>
 
-          <button onClick={() => navigate("/employer/my-tenders")}>
+          <button
+            onClick={() => navigate("/employer/my-tenders")}
+          >
             My Tenders
           </button>
 
@@ -61,79 +84,190 @@ export default function EmployerDashboard() {
       </div>
 
       {/* ================= HEADER ================= */}
-      <h1>Employer Dashboard</h1>
+      <div className="dashboard-header">
 
-      <p className="welcome-text">
-        Welcome, {user?.name || "Employer"}
-      </p>
+        <h1>Employer Dashboard</h1>
+
+        <p className="welcome-text">
+          Welcome, {user?.name || user?.username || "Employer"}
+        </p>
+
+      </div>
+
+      {/* ================= STATS ================= */}
+      <div className="dashboard-grid">
+
+        <div className="dashboard-card">
+          <h3>Total Tenders</h3>
+          <h1>{tenders.length}</h1>
+        </div>
+
+        <div className="dashboard-card">
+          <h3>Open Tenders</h3>
+
+          <h1>
+            {
+              tenders.filter(
+                (tender) => tender.status === "OPEN"
+              ).length
+            }
+          </h1>
+        </div>
+
+        <div className="dashboard-card">
+          <h3>Awarded Tenders</h3>
+
+          <h1>
+            {
+              tenders.filter(
+                (tender) => tender.status === "AWARDED"
+              ).length
+            }
+          </h1>
+        </div>
+
+      </div>
 
       {/* ================= TENDERS ================= */}
-      <div className="tender-grid">
+      <div className="dashboard-section">
+
+        <h2>My Posted Tenders</h2>
 
         {tenders.length === 0 ? (
-          <p>No tenders created yet.</p>
+
+          <div className="empty-state">
+
+            <p>No tenders created yet.</p>
+
+            <button
+              onClick={() =>
+                navigate("/employer/create-tender")
+              }
+            >
+              Create Your First Tender
+            </button>
+
+          </div>
+
         ) : (
-          tenders.map((tender) => (
-            <div key={tender.id} className="tender-card">
 
-              <h3>{tender.title || "Untitled Tender"}</h3>
+          <div className="tender-grid">
 
-              <p><strong>Category:</strong> {tender.category || "N/A"}</p>
-              <p><strong>Budget:</strong> ${tender.budget || 0}</p>
-              <p><strong>Status:</strong> {tender.status || "UNKNOWN"}</p>
+            {tenders.map((tender) => (
 
-              {/* WINNER SECTION */}
-              {tender.status === "AWARDED" && tender.winning_bid && (
-                <div className="winner-box">
-                  <h4>🏆 Winner</h4>
+              <div
+                key={tender.id}
+                className="tender-card"
+              >
 
-                  <p>
-                    <strong>Bid Amount:</strong>{" "}
-                    ${tender.winning_bid.bid_amount || 0}
-                  </p>
+                <h3>
+                  {tender.title || "Untitled Tender"}
+                </h3>
 
-                  <p>
-                    <strong>Score:</strong>{" "}
-                    {tender.winning_bid.evaluation_score || 0}
-                  </p>
+                <p>
+                  <strong>Category:</strong>{" "}
+                  {tender.category || "N/A"}
+                </p>
 
-                  <p>
-                    <strong>Contractor:</strong>{" "}
-                    {tender.winning_bid.contractor?.name || "N/A"}
-                  </p>
+                <p>
+                  <strong>Description:</strong>{" "}
+                  {tender.description || "No description"}
+                </p>
 
-                  <p>
-                    <strong>Email:</strong>{" "}
-                    {tender.winning_bid.contractor?.email || "N/A"}
-                  </p>
-                </div>
-              )}
+                <p>
+                  <strong>Budget:</strong>{" "}
+                  KES {tender.budget || 0}
+                </p>
 
-              {/* ACTIONS */}
-              <div className="actions">
-                <button
-                  onClick={() =>
-                    navigate(`/employer/tenders/${tender.id}/bids`)
-                  }
-                >
-                  View Bids
-                </button>
+                <p>
+                  <strong>Deadline:</strong>{" "}
+                  {tender.deadline || "N/A"}
+                </p>
 
-                {tender.status === "OPEN" && (
+                <p>
+                  <strong>Status:</strong>{" "}
+                  {tender.status || "OPEN"}
+                </p>
+
+                {/* ================= WINNER ================= */}
+                {tender.status === "AWARDED" &&
+                  tender.winning_bid && (
+
+                  <div className="winner-box">
+
+                    <h4>🏆 Winning Contractor</h4>
+
+                    <p>
+                      <strong>Bid Amount:</strong>{" "}
+                      KES {
+                        tender.winning_bid.bid_amount || 0
+                      }
+                    </p>
+
+                    <p>
+                      <strong>Score:</strong>{" "}
+                      {
+                        tender.winning_bid
+                          .evaluation_score || 0
+                      }
+                    </p>
+
+                    <p>
+                      <strong>Contractor:</strong>{" "}
+                      {
+                        tender.winning_bid.contractor
+                          ?.name || "N/A"
+                      }
+                    </p>
+
+                    <p>
+                      <strong>Email:</strong>{" "}
+                      {
+                        tender.winning_bid.contractor
+                          ?.email || "N/A"
+                      }
+                    </p>
+
+                  </div>
+                )}
+
+                {/* ================= ACTIONS ================= */}
+                <div className="actions">
+
                   <button
                     onClick={() =>
-                      navigate(`/employer/award/${tender.id}`)
+                      navigate(
+                        `/employer/tenders/${tender.id}/bids`
+                      )
                     }
                   >
-                    Award Tender
+                    View Bids
                   </button>
-                )}
+
+                  {tender.status === "OPEN" && (
+                    <button disabled>
+                      Awaiting System Evaluation
+                    </button>
+                  )}
+
+                  {tender.status === "AWARDED" && (
+                    <button disabled>
+                      Tender Awarded
+                    </button>
+                  )}
+
+                </div>
+
               </div>
 
-            </div>
-          ))
+            ))}
+
+          </div>
+
         )}
+
       </div>
+
     </div>
   )
 }

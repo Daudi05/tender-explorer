@@ -1,40 +1,43 @@
-import "../stub.css";
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { apiFetch } from "../../api/client"
+import "../stub.css"
 
 export default function ContractorDashboard() {
+  const [tenders, setTenders] = useState([])
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    async function fetchTenders() {
+      try {
+        const data = await apiFetch("/api/tenders")
+
+        console.log("API RESPONSE:", data)
+
+        setTenders(data.tenders || [])
+      } catch (error) {
+        console.error("Fetch error:", error)
+      }
+    }
+
+    fetchTenders()
+  }, [])
+
   const stats = [
-    { title: "Submitted Bids", value: 18 },
+    { title: "Available Tenders", value: tenders.length },
     { title: "Awards Won", value: 6 },
     { title: "Reputation Score", value: "92%" },
     { title: "Current Ranking", value: "#3" },
-  ];
-
-  const bidActivity = [
-    {
-      tender: "Road Construction",
-      amount: "KES 1,200,000",
-      status: "Under Review",
-      ranking: "#2",
-    },
-    {
-      tender: "ICT Equipment Supply",
-      amount: "KES 450,000",
-      status: "Awarded",
-      ranking: "#1",
-    },
-    {
-      tender: "School Renovation",
-      amount: "KES 870,000",
-      status: "Flagged",
-      ranking: "#5",
-    },
-  ];
+  ]
 
   return (
     <div className="dashboard-page">
+
       <div className="dashboard-header">
         <h1>Contractor Dashboard</h1>
+
         <p>
-          Track bids, rankings, awards, and contractor performance.
+          Browse available tenders and track contractor performance.
         </p>
       </div>
 
@@ -48,32 +51,49 @@ export default function ContractorDashboard() {
         ))}
       </div>
 
-      {/* TABLE */}
+      {/* AVAILABLE TENDERS */}
       <div className="dashboard-section">
-        <h2>Recent Bid Activity</h2>
+        <h2>Available Tenders</h2>
 
-        <table className="dashboard-table">
-          <thead>
-            <tr>
-              <th>Tender</th>
-              <th>Bid Amount</th>
-              <th>Status</th>
-              <th>Ranking</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {bidActivity.map((item, index) => (
-              <tr key={index}>
-                <td>{item.tender}</td>
-                <td>{item.amount}</td>
-                <td>{item.status}</td>
-                <td>{item.ranking}</td>
+        {tenders.length === 0 ? (
+          <p>No tenders available</p>
+        ) : (
+          <table className="dashboard-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Budget</th>
+                <th>Deadline</th>
+                <th>Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {tenders.map((tender) => (
+                <tr key={tender.id}>
+                  <td>{tender.title}</td>
+                  <td>{tender.description}</td>
+                  <td>KES {tender.budget}</td>
+                  <td>{tender.deadline}</td>
+
+                  {/* ✅ NEW: BID BUTTON */}
+                  <td>
+                    <button
+                      onClick={() =>
+                        navigate(`/contractor/tenders/${tender.id}`)
+                      }
+                    >
+                      Place Bid
+                    </button>
+                  </td>
+
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
-  );
+  )
 }

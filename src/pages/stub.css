@@ -385,3 +385,226 @@
 .nav-links button:hover {
   background: #1d4ed8;
 }
+
+/* ================= BID PAGE LAYOUT ================= */
+
+.bid-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 650px;
+  margin-top: 20px;
+}
+
+/* Labels */
+.bid-form label {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: -8px;
+  color: #333;
+}
+
+/* Inputs */
+.bid-form input,
+.bid-form textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s ease;
+  background: #fff;
+}
+
+.bid-form input:focus,
+.bid-form textarea:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* Textarea */
+.bid-form textarea {
+  resize: vertical;
+  min-height: 140px;
+}
+
+/* Submit button */
+.bid-form button {
+  margin-top: 10px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 10px;
+  background: #4f46e5;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.bid-form button:hover {
+  background: #3730a3;
+}
+
+/* ================= TENDER HEADER CARD ================= */
+
+.dashboard-header {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+
+.dashboard-header h1 {
+  margin-bottom: 8px;
+}
+
+.dashboard-header p {
+  color: #666;
+}
+
+/* ================= INFO CARDS ================= */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 15px;
+}
+
+.dashboard-card {
+  background: #fff;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.dashboard-card h3 {
+  font-size: 14px;
+  color: #666;
+}
+
+.dashboard-card h1 {
+  font-size: 22px;
+  margin-top: 6px;
+}
+
+/* ================= SECTION ================= */
+
+.dashboard-section {
+  margin-top: 30px;
+}
+
+
+/* ================= CREATE TENDER PAGE ================= */
+
+.create-tender-container {
+  max-width: 800px;
+  margin: 30px auto;
+  padding: 20px;
+}
+
+/* Page header */
+.create-tender-header {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+
+.create-tender-header h1 {
+  margin-bottom: 6px;
+}
+
+.create-tender-header p {
+  color: #666;
+}
+
+/* FORM CARD */
+.create-tender-form {
+  background: #fff;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Labels */
+.create-tender-form label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: -6px;
+}
+
+/* Inputs */
+.create-tender-form input,
+.create-tender-form textarea,
+.create-tender-form select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s ease;
+  background: #fff;
+}
+
+.create-tender-form input:focus,
+.create-tender-form textarea:focus,
+.create-tender-form select:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* Textarea */
+.create-tender-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Submit button */
+.create-tender-form button {
+  margin-top: 10px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 10px;
+  background: #4f46e5;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.create-tender-form button:hover {
+  background: #3730a3;
+}
+
+/* Two-column layout helper (optional) */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+.warning-banner {
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  color: #856404;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  font-weight: 500;
+}

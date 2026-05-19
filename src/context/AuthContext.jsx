@@ -5,11 +5,11 @@ const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
-  const [token, setToken] = useState(() => localStorage.getItem("token"))
+  const [token, setToken] = useState(null)
   const [loading, setLoading] = useState(true)
 
   // -----------------------------
-  // AUTO AUTH RESTORE ON REFRESH
+  // RESTORE SESSION
   // -----------------------------
   useEffect(() => {
     const restoreSession = async () => {
@@ -27,14 +27,22 @@ export function AuthProvider({ children }) {
           },
         })
 
-        setUser(data.user || data)
+        // SAFETY CHECK: prevent crash if backend returns error object
+        if (!data || data.error) {
+          throw new Error("Invalid session")
+        }
+
+        const userData = data.user || data
+
+        setUser(userData)
         setToken(storedToken)
+
       } catch (err) {
         console.log("Session expired or invalid token")
 
         localStorage.removeItem("token")
-        setToken(null)
         setUser(null)
+        setToken(null)
       } finally {
         setLoading(false)
       }
@@ -55,18 +63,21 @@ export function AuthProvider({ children }) {
       body: JSON.stringify({ email, password }),
     })
 
-    // support both backend formats
+    if (!data) {
+      throw new Error("No response from server")
+    }
+
     const accessToken = data.access_token || data.token
     const userData = data.user
 
-    if (!accessToken || !userData) {
-      throw new Error("Invalid login response from server")
+    if (!accessToken) {
+      throw new Error("Missing token from server")
     }
 
     localStorage.setItem("token", accessToken)
 
     setToken(accessToken)
-    setUser(userData)
+    setUser(userData || null)
 
     return { token: accessToken, user: userData }
   }
@@ -89,8 +100,8 @@ export function AuthProvider({ children }) {
   // -----------------------------
   function logout() {
     localStorage.removeItem("token")
-    setToken(null)
     setUser(null)
+    setToken(null)
     window.location.href = "/login"
   }
 
@@ -100,7 +111,7 @@ export function AuthProvider({ children }) {
         user,
         token,
         loading,
-        isAuthenticated: !!user,
+        isAuthenticated: !!token && !!user,
         login,
         register,
         logout,
@@ -111,10 +122,15 @@ export function AuthProvider({ children }) {
   )
 }
 
+// -----------------------------
+// SAFE HOOK
+// -----------------------------
 export function useAuth() {
   const ctx = useContext(AuthContext)
+
   if (!ctx) {
-    throw new Error("useAuth must be used inside <AuthProvider>")
+    throw new Error("useAuth must be used inside AuthProvider")
   }
+
   return ctx
 }
