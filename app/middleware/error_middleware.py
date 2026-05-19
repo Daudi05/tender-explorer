@@ -3,6 +3,7 @@ from flask import jsonify
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 
+from app.utils.validations import handle_error
 
 def register_error_handlers(app):
     @app.errorhandler(400)
@@ -29,35 +30,12 @@ def register_error_handlers(app):
 
 
     @app.errorhandler(404)
-    def not_found(error):
-        return jsonify({
-            "success": False,
-            "message": "Resource not found"
-        }), 404
-
-
-    @app.errorhandler(405)
-    def method_not_allowed(error):
-        return jsonify({
-            "success": False,
-            "message": "Method not allowed"
-        }), 405
-
-
-    @app.errorhandler(422)
-    def validation_error(error):
-        return jsonify({
-            "success": False,
-            "message": "Validation failed"
-        }), 422
-
+    def not_found(e):
+        return handle_error("Resource not found", 404)
 
     @app.errorhandler(500)
-    def internal_server_error(error):
-        return jsonify({
-            "success": False,
-            "message": "Internal server error"
-        }), 500
+    def internal_error(e):
+        return handle_error("An internal server error occurred", 500)
 
 
     @app.errorhandler(ValidationError)

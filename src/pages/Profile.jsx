@@ -6,47 +6,72 @@ export default function Profile() {
   const [user, setUser] = useState({ name: "", email: "", phone: "", role: "" })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState(null) // { type: 'success'|'error', text }
 
   useEffect(() => {
-    apiFetch("/api/auth/me")
+    apiFetch("/auth/me")
       .then((data) => setUser(data.user || data))
-      .catch((err) => alert(err.message))
+      .catch((err) => setMessage({ type: "error", text: err.message || "Failed to load profile" }))
       .finally(() => setLoading(false))
   }, [])
 
   function handleChange(e) {
     setUser((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    if (message) setMessage(null)
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true)
+    setMessage(null)
     try {
-      const data = await apiFetch("/api/auth/me", {
+      const data = await apiFetch("/auth/me", {
         method: "PATCH",
         body: JSON.stringify({ name: user.name, phone: user.phone }),
       })
       setUser(data.user || data)
-      alert("Profile updated")
+      setMessage({ type: "success", text: "Profile updated successfully!" })
     } catch (err) {
-      alert(err.message || "Failed to update profile")
+      setMessage({ type: "error", text: err.message || "Failed to update profile" })
     } finally {
       setSaving(false)
     }
   }
 
-  if (loading) return <div className="stub-page"><h2>Loading profile...</h2></div>
+  if (loading) return <div className="stub-page"><h2>Loading profile…</h2></div>
 
   return (
     <div className="profile-page">
       <div className="profile-card">
-        <h2>My Profile</h2>
-        <form onSubmit={handleSubmit} className="auth-form">
-          <input type="text" name="name" value={user.name} onChange={handleChange} placeholder="Full Name" />
-          <input type="email" value={user.email} disabled placeholder="Email" />
-          <input type="tel" name="phone" value={user.phone || ""} onChange={handleChange} placeholder="Phone Number" />
-          <input type="text" value={user.role} disabled placeholder="Role" />
-          <button type="submit" disabled={saving}>{saving ? "Saving..." : "Save Changes"}</button>
+        <h1>My Profile</h1>
+        <p className="profile-subtitle">Update your name and phone number</p>
+
+        {message && (
+          <div className={`toast toast-${message.type}`}>
+            {message.type === "success" ? "✓" : "✕"} {message.text}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="profile-form">
+          <div className="profile-group">
+            <label>Full name</label>
+            <input type="text" name="name" value={user.name} onChange={handleChange} placeholder="Full name" />
+          </div>
+          <div className="profile-group">
+            <label>Email address</label>
+            <input type="email" value={user.email} disabled placeholder="Email" />
+          </div>
+          <div className="profile-group">
+            <label>Phone number</label>
+            <input type="tel" name="phone" value={user.phone || ""} onChange={handleChange} placeholder="Phone number" />
+          </div>
+          <div className="profile-group">
+            <label>Role</label>
+            <input type="text" value={user.role} disabled placeholder="Role" />
+          </div>
+          <button type="submit" disabled={saving}>
+            {saving ? "Saving…" : "Save changes →"}
+          </button>
         </form>
       </div>
     </div>

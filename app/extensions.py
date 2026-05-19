@@ -1,9 +1,3 @@
-
-"""
-Centralized Flask extension instances.
-All modules import their dependencies from here so each
-extension is initialized exactly once in app/__init__.py.
-"""
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_marshmallow import Marshmallow
