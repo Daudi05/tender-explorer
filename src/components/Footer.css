@@ -11,3 +11,9 @@
   color: #86efac;
   font-weight: 700;
 }
+
+/* seamless dark footer on home page */
+.layout:has(.home-page) .footer {
+  background: #060d08;
+  border-top-color: rgba(255,255,255,0.05);
+}

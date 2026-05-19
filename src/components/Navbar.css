@@ -10,6 +10,45 @@
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
+  transition: background 200ms ease, border-color 200ms ease;
+}
+
+/* ── Dark navbar when on home page ── */
+.layout:has(.home-page) .navbar {
+  background: rgba(6, 13, 8, 0.80);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  box-shadow: none;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.layout:has(.home-page) .logo {
+  color: #86efac;
+}
+
+.layout:has(.home-page) .nav-link {
+  color: rgba(255, 255, 255, 0.50);
+}
+
+.layout:has(.home-page) .nav-link:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.layout:has(.home-page) .nav-link.active {
+  color: #4ade80;
+  background: rgba(21, 128, 61, 0.15);
+  border-color: rgba(21, 128, 61, 0.30);
+}
+
+.layout:has(.home-page) .logout {
+  color: rgba(255, 255, 255, 0.50);
+}
+
+.layout:has(.home-page) .logout:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .logo {
