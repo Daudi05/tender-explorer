@@ -1,4 +1,4 @@
-#!/mnt/c/Users/User/tender-explorer/venv/bin/python3
+#!/home/dwege/tender-explorer/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

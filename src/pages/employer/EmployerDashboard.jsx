@@ -71,7 +71,6 @@ export default function EmployerDashboard() {
   return (
     <div className="dashboard-page">
 
-      {/* ✅ BACK BUTTON ADDED ONLY */}
       <button
         onClick={() => navigate(-1)}
         style={{
@@ -87,7 +86,6 @@ export default function EmployerDashboard() {
         ← Back
       </button>
 
-      {/* Inner nav */}
       <div className="employer-navbar">
         <span style={{ fontWeight: 700, fontSize: "1rem", color: "white" }}>
           Employer Panel
@@ -171,6 +169,7 @@ export default function EmployerDashboard() {
               {tenders.map((t) => {
                 const count = bidCounts[t.id] || 0
                 const canAward = t.status === "OPEN" && count > 0
+                const canSendLetter = t.status === "AWARDED"
 
                 return (
                   <tr key={t.id}>
@@ -194,7 +193,8 @@ export default function EmployerDashboard() {
                     </td>
                     <td><StatusBadge status={t.status} /></td>
                     <td>
-                      <div style={{ display: "flex", gap: "0.4rem" }}>
+                      <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                        
                         <button
                           onClick={() => navigate(`/employer/tenders/${t.id}/bids`)}
                         >
@@ -209,6 +209,28 @@ export default function EmployerDashboard() {
                         >
                           {count === 0 ? "No bids yet" : "Award Now →"}
                         </button>
+
+                        {/* ✅ ADDED: Send Award Letter */}
+                        {canSendLetter && (
+                          <button
+                            onClick={() =>
+                              navigate(`/employer/tenders/${t.id}/send-award-letter`)
+                            }
+                            style={{
+                              padding: "5px 12px",
+                              borderRadius: "8px",
+                              border: "1px solid #10b981",
+                              background: "#ecfdf5",
+                              color: "#065f46",
+                              fontWeight: 600,
+                              cursor: "pointer",
+                              fontSize: "0.8rem"
+                            }}
+                          >
+                            Send Award Letter 📩
+                          </button>
+                        )}
+
                       </div>
                     </td>
                   </tr>

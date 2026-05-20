@@ -62,6 +62,7 @@ export default function ContractorDashboard() {
           <button onClick={() => navigate("/contractor/my-awards")}>My Awards</button>
           <button onClick={() => navigate("/contractor/my-documents")}>Documents</button>
           <button onClick={() => navigate("/profile")}>Profile</button>
+          <button onClick={() => navigate("/contractor/award-letters")}>Award Letters</button>
         </div>
       </div>
 
