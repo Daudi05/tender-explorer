@@ -24,6 +24,7 @@ def create_app():
     from app.documents.controllers.document_routes import documents_bp
     from app.notifications.controllers.notification_routes import notifications_bp
     from app.awards.controllers.award_routes import awards_bp
+    from app.auth.controllers.admin_routes import admin_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(tenders_bp)
@@ -31,6 +32,7 @@ def create_app():
     app.register_blueprint(documents_bp)
     app.register_blueprint(notifications_bp)
     app.register_blueprint(awards_bp)
+    app.register_blueprint(admin_bp)
 
     with app.app_context():
         from app.auth.models.user import User
