@@ -1,6 +1,5 @@
 import os
 import uuid
-import traceback
 from flask import send_from_directory
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -87,9 +86,6 @@ def upload_award_letter(tender_id):
 
     except Exception as e:
         db.session.rollback()
-        print("FULL ERROR TRACE")
-        print(traceback.format_exc())
-        
         return jsonify({
             "error": "Unexpected server error",
             "details": str(e)

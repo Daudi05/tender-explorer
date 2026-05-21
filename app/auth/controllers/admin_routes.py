@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required
+from app.middleware.role_middleware import role_required
 
 from app.auth.models.user import User
 from app.bids.models.bid import Bid
@@ -18,6 +19,7 @@ admin_bp = Blueprint(
 # =========================================
 @admin_bp.route("/dashboard", methods=["GET"])
 @jwt_required()
+@role_required("ADMIN")
 def admin_dashboard():
 
     # =====================================

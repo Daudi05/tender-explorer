@@ -13,7 +13,7 @@ export default function AwardLetters() {
   useEffect(() => {
     async function fetchAwardLetters() {
       try {
-        const data = await apiFetch("/api/award-letters/my")
+        const data = await apiFetch("/award-letters/my")
 
         setLetters(
           Array.isArray(data)
