@@ -22,6 +22,7 @@ import MyTenders from "./pages/employer/MyTenders"
 import CreateTender from "./pages/employer/CreateTender"
 import TenderBids from "./pages/employer/TenderBids"
 import AwardTender from "./pages/employer/AwardTender"
+import SendAwardLetter from "./pages/employer/SendAwardLetter"
 
 // Contractor
 import ContractorDashboard from "./pages/contractor/ContractorDashboard"
@@ -30,6 +31,7 @@ import TenderDetail from "./pages/contractor/TenderDetail"
 import MyBids from "./pages/contractor/MyBids"
 import MyDocuments from "./pages/contractor/MyDocuments"
 import MyAwards from "./pages/contractor/MyAwards"
+import MyAwardLetters from "./pages/contractor/MyAwardLetters"
 
 // Admin
 import AdminDashboard from "./pages/admin/AdminDashboard"
@@ -64,6 +66,12 @@ export default function App() {
             <Route path="/employer/create-tender" element={<CreateTender />} />
             <Route path="/employer/tenders/:id/bids" element={<TenderBids />} />
             <Route path="/employer/award/:id" element={<AwardTender />} />
+
+            {/* ✅ ADDED ROUTE (NO OTHER CHANGES) */}
+            <Route
+              path="/employer/tenders/:tenderId/send-award-letter"
+              element={<SendAwardLetter />}
+            />
           </Route>
 
           {/* ================= CONTRACTOR ================= */}
@@ -74,6 +82,7 @@ export default function App() {
             <Route path="/contractor/my-bids" element={<MyBids />} />
             <Route path="/contractor/my-documents" element={<MyDocuments />} />
             <Route path="/contractor/my-awards" element={<MyAwards />} />
+            <Route path="/contractor/award-letters" element={<MyAwardLetters />} />
           </Route>
 
           {/* ================= ADMIN ================= */}

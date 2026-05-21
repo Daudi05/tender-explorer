@@ -5,6 +5,7 @@ import { apiFetch } from '../../api/client'
 
 export default function CreateTender() {
   const navigate = useNavigate()
+
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -12,17 +13,23 @@ export default function CreateTender() {
     budget: '',
     deadline: '',
   })
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
   function handleChange(e) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }))
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
+
     setError(null)
     setLoading(true)
+
     try {
       await apiFetch('/tenders', {
         method: 'POST',
@@ -34,25 +41,64 @@ export default function CreateTender() {
           deadline: new Date(form.deadline).toISOString(),
         }),
       })
+
       navigate('/employer/my-tenders')
+
     } catch (err) {
-      setError(err.message || 'Failed to create tender')
+
+      setError(
+        err.message || 'Failed to create tender'
+      )
+
     } finally {
+
       setLoading(false)
+
     }
   }
 
   return (
     <div className="create-tender-container">
+
+      {/* BACK BUTTON */}
+      <button
+        onClick={() => navigate(-1)}
+        style={{
+          marginBottom: "1rem",
+          padding: "8px 14px",
+          borderRadius: "8px",
+          border: "1px solid var(--color-border)",
+          background: "var(--color-surface-hover)",
+          cursor: "pointer",
+          fontWeight: 600
+        }}
+      >
+        ← Back
+      </button>
+
       <div className="create-tender-header">
         <h1>Create Tender</h1>
-        <p>Fill in the details below to publish a new tender</p>
+        <p>
+          Fill in the details below to publish a new tender
+        </p>
       </div>
 
-      {error && <div className="toast toast-error" style={{ marginBottom: '1rem' }}>✕ {error}</div>}
+      {error && (
+        <div
+          className="toast toast-error"
+          style={{ marginBottom: '1rem' }}
+        >
+          ✕ {error}
+        </div>
+      )}
 
-      <form className="create-tender-form" onSubmit={handleSubmit}>
+      <form
+        className="create-tender-form"
+        onSubmit={handleSubmit}
+      >
+
         <label>Title</label>
+
         <input
           name="title"
           placeholder="Enter tender title"
@@ -62,6 +108,7 @@ export default function CreateTender() {
         />
 
         <label>Description</label>
+
         <textarea
           name="description"
           placeholder="Describe the project requirements"
@@ -71,6 +118,7 @@ export default function CreateTender() {
         />
 
         <label>Category</label>
+
         <input
           name="category"
           placeholder="e.g Construction, IT, Supplies"
@@ -80,8 +128,10 @@ export default function CreateTender() {
         />
 
         <div className="form-row">
+
           <div>
             <label>Budget (KES)</label>
+
             <input
               name="budget"
               type="number"
@@ -92,8 +142,10 @@ export default function CreateTender() {
               required
             />
           </div>
+
           <div>
             <label>Deadline</label>
+
             <input
               name="deadline"
               type="datetime-local"
@@ -102,11 +154,13 @@ export default function CreateTender() {
               required
             />
           </div>
+
         </div>
 
         <button type="submit" disabled={loading}>
           {loading ? 'Publishing…' : 'Publish Tender →'}
         </button>
+
       </form>
     </div>
   )

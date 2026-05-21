@@ -1,106 +1,138 @@
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { apiFetch } from "../../api/client"
-import "../stub.css"
+import "../stub.css";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { apiFetch } from "../../api/client";
 
 export default function AdminDashboard() {
-  const navigate = useNavigate()
-  const [flaggedBids, setFlaggedBids] = useState([])
-  const [pendingDocs, setPendingDocs] = useState(0)
-  const [activeTenders, setActiveTenders] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate();
+
+  const [stats, setStats] = useState({
+    flagged_bids: 0,
+    pending_documents: 0,
+    registered_users: 0,
+    active_tenders: 0,
+  });
+
+  const [fraudAlerts, setFraudAlerts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.allSettled([
-      apiFetch("/bids/flagged"),
-      apiFetch("/documents/all"),
-      apiFetch("/tenders"),
-    ]).then(([bidsRes, docsRes, tendersRes]) => {
-      if (bidsRes.status === "fulfilled") {
-        const d = bidsRes.value
-        setFlaggedBids(Array.isArray(d) ? d : d.bids ?? [])
-      }
-      if (docsRes.status === "fulfilled") {
-        const docs = Array.isArray(docsRes.value) ? docsRes.value : docsRes.value.documents ?? []
-        setPendingDocs(docs.filter((d) => d.verification_status === "pending").length)
-      }
-      if (tendersRes.status === "fulfilled") {
-        const tenders = Array.isArray(tendersRes.value) ? tendersRes.value : tendersRes.value.tenders ?? []
-        setActiveTenders(tenders.filter((t) => t.status === "OPEN").length)
-      }
-    }).finally(() => setLoading(false))
-  }, [])
+    fetchDashboard();
+    const interval = setInterval(fetchDashboard, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
-  const stats = [
-    { title: "Flagged Bids", value: loading ? "…" : flaggedBids.length },
-    { title: "Pending Documents", value: loading ? "…" : pendingDocs },
-    { title: "Active Tenders", value: loading ? "…" : activeTenders },
-  ]
+  async function fetchDashboard() {
+    try {
+      setLoading(true);
+      const response = await apiFetch("/admin/dashboard");
+      setStats({
+        flagged_bids: response.stats.flagged_bids,
+        pending_documents: response.stats.pending_documents,
+        registered_users: response.stats.registered_users,
+        active_tenders: response.stats.active_tenders,
+      });
+      setFraudAlerts(response.fraud_alerts || []);
+    } catch (err) {
+      // silently ignore — stale data is fine between refreshes
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="dashboard-page">
+
+      <button
+        onClick={() => navigate(-1)}
+        style={{
+          padding: "8px 14px",
+          borderRadius: "8px",
+          border: "1px solid #d1d5db",
+          background: "white",
+          cursor: "pointer",
+          fontWeight: "600",
+          marginBottom: "16px",
+        }}
+      >
+        ← Back
+      </button>
+
       <div className="dashboard-header">
         <h1>Admin Dashboard</h1>
         <p>Monitor fraud alerts, documents, and platform activity.</p>
       </div>
 
+      <div className="admin-actions">
+        <div
+          className="admin-action-card"
+          onClick={() => navigate("/admin/verify-documents")}
+        >
+          <h3>Verify Documents</h3>
+          <p>Review contractor uploads</p>
+        </div>
+        <div
+          className="admin-action-card"
+          onClick={() => navigate("/admin/flagged-bids")}
+        >
+          <h3>Flagged Bids</h3>
+          <p>Review suspicious activity</p>
+        </div>
+      </div>
+
+      {loading && <p>Loading dashboard...</p>}
+
       <div className="dashboard-grid">
-        {stats.map((stat, index) => (
-          <div key={index} className="dashboard-card">
-            <h3>{stat.title}</h3>
-            <h1>{stat.value}</h1>
-          </div>
-        ))}
+        <div className="dashboard-card">
+          <h3>Flagged Bids</h3>
+          <h1>{stats.flagged_bids}</h1>
+        </div>
+        <div className="dashboard-card">
+          <h3>Pending Documents</h3>
+          <h1>{stats.pending_documents}</h1>
+        </div>
+        <div className="dashboard-card">
+          <h3>Registered Users</h3>
+          <h1>{stats.registered_users}</h1>
+        </div>
+        <div className="dashboard-card">
+          <h3>Active Tenders</h3>
+          <h1>{stats.active_tenders}</h1>
+        </div>
       </div>
 
       <div className="dashboard-section">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", paddingBottom: "0.875rem", borderBottom: "1px solid var(--color-border)" }}>
-          <h2 style={{ margin: 0, border: 0, padding: 0 }}>
-            Flagged Bids {!loading && `(${flaggedBids.length})`}
-          </h2>
-          <button
-            onClick={() => navigate("/admin/flagged-bids")}
-            style={{ padding: "0.45rem 1rem", background: "var(--color-primary-subtle)", color: "var(--color-primary)", border: "1px solid var(--color-primary-light)", borderRadius: 9999, fontWeight: 600, fontSize: "0.85rem", cursor: "pointer" }}
-          >
-            View all →
-          </button>
-        </div>
-
-        {loading ? (
-          <p style={{ color: "#9ca3af", textAlign: "center", padding: "2rem" }}>Loading…</p>
-        ) : flaggedBids.length === 0 ? (
-          <p style={{ color: "#9ca3af", textAlign: "center", padding: "2rem" }}>No flagged bids at the moment.</p>
-        ) : (
-          <table className="dashboard-table">
-            <thead>
+        <h2>Recent Fraud Alerts</h2>
+        <table className="dashboard-table">
+          <thead>
+            <tr>
+              <th>Contractor</th>
+              <th>Tender</th>
+              <th>Fraud Score</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {fraudAlerts.length === 0 ? (
               <tr>
-                <th>Bid ID</th>
-                <th>Amount</th>
-                <th>Fraud Score</th>
-                <th>Status</th>
+                <td colSpan="4" style={{ textAlign: "center", color: "#9ca3af" }}>
+                  No fraud alerts
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {flaggedBids.slice(0, 10).map((bid) => (
-                <tr key={bid.id}>
-                  <td style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                    {bid.id?.slice(0, 8)}…
-                  </td>
-                  <td style={{ fontWeight: 600 }}>KES {Number(bid.bid_amount).toLocaleString()}</td>
-                  <td style={{ color: "#dc2626", fontWeight: 700 }}>
-                    {bid.fraud_score != null ? `${Number(bid.fraud_score).toFixed(1)}%` : "—"}
-                  </td>
-                  <td>
-                    <span style={{ background: "#fef2f2", color: "#991b1b", border: "1px solid #fecaca", borderRadius: 9999, padding: "3px 10px", fontSize: "0.75rem", fontWeight: 700 }}>
-                      ⚠ Flagged
-                    </span>
-                  </td>
+            ) : (
+              fraudAlerts.map((item, index) => (
+                <tr key={index}>
+                  <td>{item.contractor}</td>
+                  <td>{item.tender}</td>
+                  <td style={{ color: "#dc2626", fontWeight: 700 }}>{item.fraud_score}</td>
+                  <td>{item.status}</td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
+
     </div>
   )
 }

@@ -65,7 +65,7 @@ def list_my_documents():
 @role_required("ADMIN")
 def list_all_documents():
     from app.documents.models.document import Document
-    docs = Document.query.order_by(Document.uploaded_at.desc()).all()
+    docs = Document.query.order_by(Document.created_at.desc()).all()
     return jsonify({"documents": documents_response_schema.dump(docs)}), 200
 
 

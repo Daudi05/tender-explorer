@@ -25,7 +25,7 @@ class User(db.Model):
     last_login_ip = db.Column(db.String(45), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
-    # ✅ ADD THIS (required for Bid.contractor back_populates)
+    
     bids = db.relationship(
         "Bid",
         back_populates="contractor",

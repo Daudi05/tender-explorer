@@ -2,12 +2,15 @@ import '../stub.css'
 import { useEffect, useState } from 'react'
 import { apiFetch } from '../../api/client'
 import TenderCard from '../../components/TenderCard'
+import { useNavigate } from "react-router-dom"
 
 export default function BrowseTenders() {
   const [tenders, setTenders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
+
+  const navigate = useNavigate()
 
   useEffect(() => {
     apiFetch('/tenders')
@@ -28,6 +31,23 @@ export default function BrowseTenders() {
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+
+      {/* BACK BUTTON */}
+      <button
+        onClick={() => navigate(-1)}
+        style={{
+          marginBottom: "1rem",
+          padding: "0.6rem 1rem",
+          borderRadius: "10px",
+          border: "1px solid var(--color-border)",
+          background: "white",
+          cursor: "pointer",
+          fontWeight: 600,
+        }}
+      >
+        ← Back
+      </button>
+
       <div className="dashboard-header">
         <h1>Browse Tenders</h1>
         <p>{open.length} open tender{open.length !== 1 ? 's' : ''} available</p>

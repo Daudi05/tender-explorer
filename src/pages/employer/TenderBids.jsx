@@ -48,6 +48,23 @@ export default function TenderBids() {
 
   return (
     <div style={{ maxWidth: 960, margin: "0 auto" }}>
+
+      {/* BACK BUTTON */}
+      <button
+        onClick={() => navigate(-1)}
+        style={{
+          marginBottom: "1rem",
+          padding: "0.6rem 1rem",
+          borderRadius: "10px",
+          border: "1px solid var(--color-border)",
+          background: "white",
+          cursor: "pointer",
+          fontWeight: 600,
+        }}
+      >
+        ← Back
+      </button>
+
       {/* Tender header */}
       <div style={{ background: "var(--color-primary-active)", borderRadius: 16, padding: "1.75rem 2rem", marginBottom: "1.5rem", color: "white" }}>
         <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "0.07em" }}>

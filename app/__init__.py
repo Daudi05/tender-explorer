@@ -8,13 +8,31 @@ from flask_cors import CORS
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    CORS(app)
+
+    
+  
+
 
     db.init_app(app)
     jwt.init_app(app)
     ma.init_app(app)
     bcrypt.init_app(app)
     migrate.init_app(app, db)
+
+
+    CORS(
+    app,
+    resources={r"/*": {
+        "origins": [
+            "http://localhost:5174",
+            "http://127.0.0.1:5174"
+        ]
+    }},
+    allow_headers=["Content-Type", "Authorization"],
+    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+)
+
+
 
     register_error_handlers(app)
 
@@ -24,6 +42,8 @@ def create_app():
     from app.documents.controllers.document_routes import documents_bp
     from app.notifications.controllers.notification_routes import notifications_bp
     from app.awards.controllers.award_routes import awards_bp
+    from app.auth.controllers.admin_routes import admin_bp
+    from app.awardletters.controllers.award_letter_routes import award_letter_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(tenders_bp)
@@ -31,6 +51,8 @@ def create_app():
     app.register_blueprint(documents_bp)
     app.register_blueprint(notifications_bp)
     app.register_blueprint(awards_bp)
+    app.register_blueprint(admin_bp)
+    app.register_blueprint(award_letter_bp)
 
     with app.app_context():
         from app.auth.models.user import User
@@ -39,6 +61,8 @@ def create_app():
         from app.documents.models.document import Document
         from app.notifications.models.notification import Notification
         from app.awards.models.award import Award
+        from app.awardletters.models.award_letter import AwardLetter
+
         db.create_all()
 
     return app
