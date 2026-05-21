@@ -43,7 +43,15 @@ export default function Register() {
       setSuccess("Account created successfully! Redirecting to login…");
       setTimeout(() => navigate("/login"), 1800);
     } catch (err) {
-      setError(err.message || "Registration failed. Please try again.");
+      const details = err.data?.details
+      if (details) {
+        const messages = Object.entries(details)
+          .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs[0] : msgs}`)
+          .join(" · ")
+        setError(messages)
+      } else {
+        setError(err.message || "Registration failed. Please try again.")
+      }
     } finally {
       setLoading(false);
     }

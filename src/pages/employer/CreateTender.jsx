@@ -45,11 +45,15 @@ export default function CreateTender() {
       navigate('/employer/my-tenders')
 
     } catch (err) {
-
-      setError(
-        err.message || 'Failed to create tender'
-      )
-
+      const details = err.data?.details
+      if (details) {
+        const messages = Object.entries(details)
+          .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs[0] : msgs}`)
+          .join(' · ')
+        setError(messages)
+      } else {
+        setError(err.message || 'Failed to create tender')
+      }
     } finally {
 
       setLoading(false)

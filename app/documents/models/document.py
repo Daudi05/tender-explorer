@@ -34,4 +34,9 @@ class Document(db.Model):
         index=True,
     )
 
-    uploader = db.relationship("User", foreign_keys=[uploader_id], lazy="select")
+    uploader = db.relationship(
+        "User",
+        primaryjoin="Document.uploader_id == User.id",
+        foreign_keys="[Document.uploader_id]",
+        lazy="select",
+    )
